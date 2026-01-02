@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<a href="{% url 'company_dashboard' %}">Dashboard</a>
+<a href="{% url 'company_jobs' %}">My Jobs</a>
+<a href="{% url 'company_post_job' %}" class="active">Post Job</a>
+{% endblock %}
+
+{% block content %}
+<h3>Post a Job</h3>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label>Job Title</label>
+        <input type="text" name="title" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>Description</label>
+        <textarea name="description" class="form-control" rows="4" required></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label>Location</label>
+        <input type="text" name="location" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>Salary</label>
+        <input type="text" name="salary" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>Category</label>
+        <select name="category" class="form-control" required>
+            <option value="">-- Select Category --</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button class="btn btn-primary">Post Job</button>
+</form>
+
+{% endblock %}

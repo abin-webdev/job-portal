@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-body">
+
+      <h3 class="mb-3">Add Job Category</h3>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label>Category Name</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <button class="btn btn-success">Add Category</button>
+        <a href="/admin/categories/" class="btn btn-secondary">View Categories</a>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

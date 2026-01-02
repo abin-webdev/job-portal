@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block sidebar %}
+  <a href="{% url 'admin_dashboard' %}">
+    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+  </a>
+  <a href="{% url 'admin_job_list' %}">
+    <i class="bi bi-briefcase me-2"></i> Jobs
+  </a>
+  <a href="{% url 'admin_applications' %}">
+    <i class="bi bi-file-earmark-text me-2"></i> Applications
+  </a>
+  <a href="{% url 'admin_users' %}">
+    <i class="bi bi-people me-2"></i> Users
+  </a>
+  <a href="{% url 'admin_companies' %}">
+    <i class="bi bi-building me-2"></i> Companies
+  </a>
+{% endblock %}
+
+{% block content %}
+<h3 class="mb-4 fw-bold">Admin Dashboard</h3>
+
+<div class="row g-4">
+
+  <!-- Jobs -->
+  <div class="col-lg-3 col-md-6">
+    <div class="card shadow border-0 h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="bg-primary text-white rounded-circle p-3 me-3">
+          <i class="bi bi-briefcase fs-4"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-1">Total Jobs</h6>
+          <h4 class="fw-bold mb-0">{{ total_jobs }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div class="col-lg-3 col-md-6">
+    <div class="card shadow border-0 h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="bg-success text-white rounded-circle p-3 me-3">
+          <i class="bi bi-people fs-4"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-1">Users</h6>
+          <h4 class="fw-bold mb-0">{{ total_users }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Applications -->
+  <div class="col-lg-3 col-md-6">
+    <div class="card shadow border-0 h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="bg-warning text-dark rounded-circle p-3 me-3">
+          <i class="bi bi-file-earmark-text fs-4"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-1">Applications</h6>
+          <h4 class="fw-bold mb-0">{{ total_applications }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Companies -->
+  <div class="col-lg-3 col-md-6">
+    <div class="card shadow border-0 h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="bg-danger text-white rounded-circle p-3 me-3">
+          <i class="bi bi-building fs-4"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-1">Companies</h6>
+          <h4 class="fw-bold mb-0">{{ total_companies }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

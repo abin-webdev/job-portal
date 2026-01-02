@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Application Details</h3>
+<hr>
+
+<table class="table table-bordered bg-white">
+    <tr>
+        <th>Applicant</th>
+        <td>{{ app.user.username }}</td>
+    </tr>
+
+    <tr>
+        <th>Email</th>
+        <td>{{ app.user.email }}</td>
+    </tr>
+
+    <tr>
+        <th>Applied At</th>
+        <td>{{ app.applied_at }}</td>
+    </tr>
+
+    <tr>
+        <th>Status</th>
+        <td>{{ app.status|title }}</td>
+    </tr>
+
+    <tr>
+        <th>Cover Letter</th>
+        <td>{{ app.cover_letter|linebreaks }}</td>
+    </tr>
+
+    <tr>
+        <th>Resume</th>
+        <td>
+            {% if app.resume %}
+                <a href="{{ app.resume.url }}"
+                   target="_blank"
+                   class="btn btn-secondary">
+                    Download Resume
+                </a>
+            {% else %}
+                Resume not uploaded
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+<a href="{% url 'company_job_applications' app.job.id %}"
+   class="btn btn-link">
+    ← Back to Applications
+</a>
+
+{% endblock %}

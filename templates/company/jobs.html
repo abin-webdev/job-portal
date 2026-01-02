@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3>My Jobs</h3>
+
+<table class="table bg-white shadow">
+    <tr>
+        <th>Job Title</th>
+        <th>Location</th>
+        <th>Applicants</th>
+    </tr>
+
+    {% for job in jobs %}
+    <tr>
+        <td>{{ job.title }}</td>
+        <td>{{ job.location }}</td>
+        <td>{{ job.applications.count }}</td>
+        <td><a href="{% url 'company_applications' job.id %}" class="btn btn-sm btn-secondary">
+        View Applicants
+    </a>
+</td>
+
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

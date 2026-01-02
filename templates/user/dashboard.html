@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block sidebar %}
+  <a href="{% url 'user_dashboard' %}">Dashboard</a>
+  <a href="{% url 'user_job_list' %}">Browse Jobs</a>
+  <a href="{% url 'user_applications' %}">My Applications</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <h3 class="mb-3 fw-bold">User Dashboard</h3>
+  <p class="text-muted">Recent Applications</p>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover bg-white shadow-sm align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Job</th>
+          <th>Status</th>
+          <th>Applied At</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for app in applications %}
+        <tr>
+          <td>{{ app.job.title }}</td>
+          <td>
+            <span class="badge 
+              {% if app.status == 'approved' %}bg-success
+              {% elif app.status == 'rejected' %}bg-danger
+              {% else %}bg-warning text-dark{% endif %}
+            ">
+              {{ app.status|title }}
+            </span>
+          </td>
+          <td>{{ app.applied_at|date:"d M Y, h:i A" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="text-center text-muted">
+            No applications yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

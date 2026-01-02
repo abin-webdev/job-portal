@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-body">
+
+      <div class="d-flex justify-content-between mb-3">
+        <h3>All Job Categories</h3>
+        <a href="/admin/add-category/" class="btn btn-primary">Add New</a>
+      </div>
+
+      <table class="table table-bordered">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Action</th>
+        </tr>
+
+        {% for cat in categories %}
+        <tr>
+          <td>{{ cat.id }}</td>
+          <td>{{ cat.name }}</td>
+          <td>
+            <a href="/admin/delete-category/{{ cat.id }}/"
+               class="btn btn-danger btn-sm"
+               onclick="return confirm('Delete this category?')">
+              Delete
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

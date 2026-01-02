@@ -1,0 +1,26 @@
+
+{% extends 'base.html' %}
+{% block sidebar %}
+  <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+  <a href="{% url 'admin_job_list' %}">Jobs</a>
+  <a href="{% url 'admin_applications' %}">Applications</a>
+  <a href="{% url 'admin_users' %}">Users</a>
+  <a href="{% url 'admin_employees' %}">Employees</a>
+  <a href="{% url 'admin_statistics' %}">Statistics</a>
+{% endblock %}
+{% block content %}
+  <h3>Statistics</h3>
+  <div class="row mb-4">
+    <div class="col-md-3"><div class="card p-3 text-center">Jobs: {{ total_jobs }}</div></div>
+    <div class="col-md-3"><div class="card p-3 text-center">Applications: {{ total_apps }}</div></div>
+    <div class="col-md-3"><div class="card p-3 text-center">Approved: {{ approved }}</div></div>
+    <div class="col-md-3"><div class="card p-3 text-center">Rejected: {{ rejected }}</div></div>
+  </div>
+  <h5>Applications per Job</h5>
+  <table class="table table-bordered bg-white shadow">
+    <tr><th>Job</th><th>Total Applications</th></tr>
+    {% for job in job_stats %}
+    <tr><td>{{ job.title }}</td><td>{{ job.total_apps }}</td></tr>
+    {% endfor %}
+  </table>
+{% endblock %}

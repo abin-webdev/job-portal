@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Job Portal{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f4f6f9;
+      overflow-x: hidden;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      min-height: 100vh;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    .sidebar a {
+      color: #e5e7eb;
+      display: block;
+      padding: 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-bottom: 6px;
+    }
+
+    .sidebar a:hover {
+      background: #1e293b;
+      color: white;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      background: white;
+      padding: 12px 20px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .footer-link {
+      color: #9ca3af;
+      text-decoration: none;
+    }
+
+    .footer-link:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    /* MOBILE SIDEBAR */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 240px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease;
+      }
+
+      .sidebar.show {
+        left: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container-fluid">
+  <div class="row">
+
+    <!-- SIDEBAR -->
+    <div class="col-md-2 sidebar" id="sidebar">
+      <h4 class="text-center mb-4">Job Portal</h4>
+
+      {% if user.is_authenticated %}
+        {% if user.profile.role == "admin" %}
+          <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+          <a href="{% url 'admin_users' %}">Users</a>
+          <a href="{% url 'admin_companies' %}">Companies</a>
+          <a href="{% url 'admin_job_list' %}">Jobs</a>
+          <a href="{% url 'admin_applications' %}">Applications</a>
+
+        {% elif user.profile.role == "company" %}
+          <a href="{% url 'company_dashboard' %}">Dashboard</a>
+          <a href="{% url 'company_post_job' %}">Post Job</a>
+          <a href="{% url 'company_jobs' %}">My Jobs</a>
+
+        {% elif user.profile.role == "user" %}
+          <a href="{% url 'user_dashboard' %}">Dashboard</a>
+          <a href="{% url 'user_job_list' %}">Browse Jobs</a>
+          <a href="{% url 'user_applications' %}">My Applications</a>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- MAIN -->
+    <div class="col-md-10 p-0 d-flex flex-column min-vh-100">
+
+      <!-- TOPBAR -->
+      <div class="topbar d-flex justify-content-between align-items-center">
+        <!-- MOBILE TOGGLE -->
+        <button class="btn btn-outline-secondary d-md-none" id="sidebarToggle">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <span>Welcome, <b>{{ user.username }}</b></span>
+        <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Logout</a>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="p-4 flex-grow-1">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="bg-dark text-light py-3">
+        <div class="container-fluid text-center small">
+          © {% now "Y" %} Job Portal • All rights reserved
+          &nbsp;|&nbsp;
+          <a href="#" class="footer-link">Privacy</a>
+          &nbsp;|&nbsp;
+          <a href="#" class="footer-link">Terms</a>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR TOGGLE SCRIPT -->
+<script>
+  document.getElementById("sidebarToggle")?.addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("show");
+  });
+</script>
+
+</body>
+</html>
