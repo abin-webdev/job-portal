@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
 
+from accounts.forms import UserUpdateForm, ProfileUpdateForm
+
 from .forms import RegisterForm,CompanyRegisterForm
 from .models import Profile, Company
 from jobs.models import Job, Application, JobCategory
@@ -78,6 +80,8 @@ def role_redirect(request):
     elif role == "company":
         return redirect("company_dashboard")
     return redirect("user_dashboard")
+
+
 
 
 # ================= COMPANY REGISTER =================
@@ -460,3 +464,31 @@ def admin_delete_company(request, company_id):
 
     return redirect("admin_companies")
 
+
+
+# ================= PROFILE UPDATE =================
+
+@login_required
+def edit_profile(request):
+
+    if request.method == "POST":
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(
+            request.POST,
+            request.FILES,
+            instance=request.user.profile
+        )
+
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('user_profile')
+
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    return render(request, 'user/edit_profile.html', {
+        'u_form': u_form,
+        'p_form': p_form
+    })

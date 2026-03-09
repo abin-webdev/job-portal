@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.db.models import Count
-
+from accounts.forms import UserUpdateForm, ProfileUpdateForm
 from jobs.models import Job, JobCategory, Application
 from accounts.models import Profile, Company
 
@@ -270,3 +270,139 @@ def apply_job(request, job_id):
 
     return redirect("user_job_detail", job_id=job.id)
 
+
+@login_required
+def user_profile(request):
+    profile = Profile.objects.get(user=request.user)
+
+    return render(request, "user/profile.html", {
+        "profile": profile
+    })
+
+
+@login_required
+def upload_profile_image(request):
+    profile = request.user.profile
+
+    if request.method == "POST" and request.FILES.get("profile_image"):
+        profile.profile_image = request.FILES["profile_image"]
+        profile.save()
+
+    return redirect("user_profile")
+
+
+from pyresparser import ResumeParser
+import spacy
+
+@login_required
+def upload_resume(request):
+
+    profile = request.user.profile
+
+    if request.method == "POST" and request.FILES.get("resume"):
+
+        profile.resume = request.FILES["resume"]
+        profile.save()
+
+        skills = extract_skills_from_resume(profile.resume.path)
+
+        if skills:
+            profile.skills = ", ".join(skills)
+            profile.save()
+
+    return redirect("user_profile")
+
+
+
+import pdfplumber
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+SKILL_KEYWORDS = [
+    "python","django","flask","react","javascript","html","css",
+    "sql","mysql","postgresql","docker","kubernetes","aws",
+    "machine learning","data science","pandas","numpy","tensorflow"
+]
+
+
+def extract_skills_from_resume(resume_path):
+
+    text = ""
+
+    with pdfplumber.open(resume_path) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text() or ""
+
+    text = text.lower()
+
+    detected_skills = []
+
+    for skill in SKILL_KEYWORDS:
+        if skill in text:
+            detected_skills.append(skill)
+
+    return detected_skills
+
+
+# ================= PROFILE UPDATE =================
+
+@login_required
+def edit_profile(request):
+
+    if request.method == "POST":
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(
+            request.POST,
+            request.FILES,
+            instance=request.user.profile
+        )
+
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('user_profile')
+
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    return render(request, 'user/edit_profile.html', {
+        'u_form': u_form,
+        'p_form': p_form
+    })
+
+
+# ================= INTERVIEW SCHEDULING =================
+
+from .models import Application, Interview
+
+def schedule_interview(request, application_id):
+
+    application = get_object_or_404(Application, id=application_id)
+
+    if request.method == "POST":
+
+        date = request.POST.get("date")
+        time = request.POST.get("time")
+        mode = request.POST.get("mode")
+        link = request.POST.get("link")
+        location = request.POST.get("location")
+
+        Interview.objects.create(
+            application=application,
+            interview_date=date,
+            interview_time=time,
+            mode=mode,
+            meeting_link=link,
+            location=location
+        )
+
+        application.status = "approved"
+        application.save()
+
+        return redirect("company_dashboard")
+
+    return render(request, "company/schedule_interview.html", {
+        "application": application
+    })

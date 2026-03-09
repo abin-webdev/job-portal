@@ -1,48 +1,601 @@
 {% extends "base.html" %}
 
-{% block sidebar %}
-<a href="{% url 'company_dashboard' %}">Dashboard</a>
-<a href="{% url 'company_jobs' %}">My Jobs</a>
-<a href="{% url 'company_post_job' %}" class="active">Post Job</a>
-{% endblock %}
+{% block page_title %}Post a Job{% endblock %}
 
 {% block content %}
-<h3>Post a Job</h3>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<form method="post">
+  :root {
+    --surface:      #ffffff;
+    --bg:           #f1f4f9;
+    --border:       #e5e9f0;
+    --text-hi:      #0d1117;
+    --text-mid:     #5a6478;
+    --text-lo:      #9ba5b7;
+    --accent:       #1a56db;
+    --accent-dark:  #1241b0;
+    --accent-soft:  #eff4ff;
+    --success:      #059669;
+    --success-bg:   #ecfdf5;
+    --warning:      #d97706;
+    --warning-bg:   #fffbeb;
+    --shadow-sm:    0 1px 4px rgba(0,0,0,.05);
+    --shadow-md:    0 4px 24px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.04);
+    --radius:       14px;
+    --font:         'Outfit', sans-serif;
+    --mono:         'DM Mono', monospace;
+  }
+
+  .page {
+    font-family: var(--font);
+    max-width: 740px;
+    margin: 0 auto;
+    animation: up .35s ease both;
+  }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Back link ── */
+  .back-link {
+    display: inline-flex; align-items: center; gap: .35rem;
+    font-size: .76rem; font-weight: 600; color: var(--text-lo);
+    text-decoration: none; margin-bottom: 1.4rem;
+    letter-spacing: .02em; transition: color .15s;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  /* ── Page header ── */
+  .page-head {
+    margin-bottom: 1.75rem;
+  }
+
+  .head-eyebrow {
+    font-size: .63rem; font-weight: 700;
+    letter-spacing: .13em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .3rem;
+  }
+
+  .head-title {
+    font-size: 1.65rem; font-weight: 800;
+    color: var(--text-hi); letter-spacing: -.04em;
+    line-height: 1; margin: 0 0 .35rem;
+  }
+
+  .head-sub {
+    font-size: .8rem; color: var(--text-lo); line-height: 1.5;
+  }
+
+  /* ── Progress steps ── */
+  .steps-bar {
+    display: flex; align-items: center;
+    gap: 0; margin-bottom: 1.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .step {
+    display: flex; align-items: center; gap: .5rem;
+    flex: 1;
+  }
+
+  .step-num {
+    width: 26px; height: 26px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 700;
+    font-family: var(--mono); flex-shrink: 0;
+    transition: background .2s, color .2s;
+  }
+
+  .step-num.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(26,86,219,.3); }
+  .step-num.done   { background: var(--success-bg); color: var(--success); }
+  .step-num.idle   { background: var(--bg); color: var(--text-lo); border: 1px solid var(--border); }
+
+  .step-label {
+    font-size: .74rem; font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .step-label.active { color: var(--accent); }
+  .step-label.done   { color: var(--success); }
+  .step-label.idle   { color: var(--text-lo); }
+
+  .step-line {
+    flex: 1; height: 1px; background: var(--border);
+    margin: 0 .5rem;
+  }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+
+  .form-section {
+    padding: 1.6rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-section:last-child { border-bottom: none; }
+
+  .section-title {
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text-lo); margin-bottom: 1.1rem;
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .section-title i { color: var(--accent); font-size: .85rem; }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── Fields ── */
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.25rem;
+  }
+
+  .field      { display: flex; flex-direction: column; }
+  .field.full { grid-column: 1 / -1; }
+
+  .field-label {
+    font-size: .74rem; font-weight: 700;
+    color: var(--text-hi); letter-spacing: .02em;
+    margin-bottom: .45rem; display: flex;
+    align-items: center; gap: .4rem;
+  }
+
+  .field-label .req {
+    color: var(--accent); font-size: .9rem; line-height: 1;
+  }
+
+  .field-hint {
+    font-size: .7rem; color: var(--text-lo);
+    margin-top: .3rem; line-height: 1.45;
+  }
+
+  .input-wrap { position: relative; }
+
+  .input-icon {
+    position: absolute;
+    left: .85rem; top: 50%; transform: translateY(-50%);
+    color: var(--text-lo); font-size: .9rem;
+    pointer-events: none; transition: color .18s;
+  }
+
+  .field-input,
+  .field-select,
+  .field-textarea {
+    width: 100%;
+    background: #f8f9fb;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: .68rem .9rem .68rem 2.4rem;
+    font-family: var(--font);
+    font-size: .875rem;
+    color: var(--text-hi);
+    outline: none;
+    transition: border-color .18s, background .18s, box-shadow .18s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .field-textarea {
+    padding: .75rem .9rem .75rem 2.4rem;
+    resize: vertical;
+    min-height: 130px;
+    line-height: 1.65;
+  }
+
+  .field-input::placeholder,
+  .field-textarea::placeholder { color: var(--text-lo); }
+
+  .field-input:focus,
+  .field-select:focus,
+  .field-textarea:focus {
+    background: var(--surface);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+  }
+
+  .input-wrap:focus-within .input-icon { color: var(--accent); }
+
+  /* Salary prefix */
+  .salary-wrap { position: relative; }
+
+  .salary-prefix {
+    position: absolute;
+    left: .9rem; top: 50%; transform: translateY(-50%);
+    font-family: var(--mono); font-size: .82rem;
+    color: var(--text-lo); pointer-events: none;
+    transition: color .18s;
+  }
+
+  .salary-input {
+    padding-left: 2.1rem !important;
+  }
+
+  .salary-wrap:focus-within .salary-prefix { color: var(--accent); }
+
+  /* Select arrow */
+  .select-wrap { position: relative; }
+
+  .select-arrow {
+    position: absolute;
+    right: .85rem; top: 50%; transform: translateY(-50%);
+    color: var(--text-lo); font-size: .8rem;
+    pointer-events: none;
+  }
+
+  /* Char counter */
+  .char-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-top: .3rem;
+  }
+
+  .char-count {
+    font-family: var(--mono); font-size: .67rem;
+    color: var(--text-lo); transition: color .2s;
+  }
+
+  .char-count.warn { color: var(--warning); }
+
+  /* ── Preview card ── */
+  .preview-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    animation: up .4s .1s ease both;
+    opacity: 0;
+  }
+
+  .preview-label {
+    font-size: .63rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text-lo); margin-bottom: .85rem;
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .preview-label i { color: var(--accent); }
+
+  .preview-inner {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem;
+    background: var(--bg); border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .preview-avatar {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 800; font-size: .82rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: var(--mono);
+    border: 1px solid rgba(26,86,219,.15);
+  }
+
+  .preview-title {
+    font-size: .92rem; font-weight: 700;
+    color: var(--text-hi); margin-bottom: .2rem;
+    letter-spacing: -.02em;
+  }
+
+  .preview-meta {
+    display: flex; flex-wrap: wrap; gap: .4rem;
+  }
+
+  .preview-chip {
+    font-size: .68rem; color: var(--text-mid);
+    background: var(--surface); border: 1px solid var(--border);
+    padding: .18rem .55rem; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: .25rem;
+  }
+
+  /* ── Submit row ── */
+  .submit-row {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap;
+    animation: up .45s .2s ease both;
+    opacity: 0;
+  }
+
+  .submit-note {
+    font-size: .73rem; color: var(--text-lo);
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .submit-note i { color: var(--accent); }
+
+  .submit-actions { display: flex; gap: .6rem; align-items: center; }
+
+  .cancel-link {
+    font-size: .8rem; font-weight: 600; color: var(--text-lo);
+    text-decoration: none; transition: color .15s;
+  }
+  .cancel-link:hover { color: var(--text-mid); }
+
+  .submit-btn {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    padding: .72rem 1.6rem;
+    font-family: var(--font); font-size: .88rem; font-weight: 700;
+    cursor: pointer; letter-spacing: -.01em;
+    box-shadow: 0 4px 16px rgba(26,86,219,.3);
+    transition: background .18s, transform .15s, box-shadow .18s;
+  }
+
+  .submit-btn:hover {
+    background: var(--accent-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(26,86,219,.35);
+  }
+
+  .submit-btn:active { transform: translateY(0); }
+
+  /* ═══════════════════════
+     RESPONSIVE
+  ═══════════════════════ */
+  @media (max-width: 640px) {
+    .steps-bar    { padding: .85rem 1rem; gap: 0; }
+    .step-label   { display: none; }
+    .fields-grid  { grid-template-columns: 1fr; }
+    .field.full   { grid-column: 1; }
+    .form-section { padding: 1.25rem; }
+    .submit-row   { flex-direction: column; align-items: stretch; }
+    .submit-actions { flex-direction: column-reverse; }
+    .submit-btn   { width: 100%; justify-content: center; }
+    .cancel-link  { text-align: center; }
+    .preview-card { padding: 1rem; }
+  }
+
+  @media (max-width: 400px) {
+    .head-title   { font-size: 1.35rem; }
+    .steps-bar    { padding: .75rem .85rem; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- Back -->
+  <a href="{% url 'company_jobs' %}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Back to My Jobs
+  </a>
+
+  <!-- Header -->
+  <div class="page-head">
+    <div class="head-eyebrow">New Listing</div>
+    <h1 class="head-title">Post a Job</h1>
+    <p class="head-sub">Fill in the details below to publish your job listing and start receiving applications.</p>
+  </div>
+
+  <!-- Progress steps -->
+  <div class="steps-bar">
+    <div class="step">
+      <div class="step-num active">1</div>
+      <span class="step-label active">Job Details</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+      <div class="step-num idle">2</div>
+      <span class="step-label idle">Description</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+      <div class="step-num idle">3</div>
+      <span class="step-label idle">Compensation</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+      <div class="step-num idle">4</div>
+      <span class="step-label idle">Publish</span>
+    </div>
+  </div>
+
+  <!-- Live preview -->
+  <div class="preview-card" id="previewCard">
+    <div class="preview-label"><i class="bi bi-eye"></i> Live Preview</div>
+    <div class="preview-inner">
+      <div class="preview-avatar" id="previewAvatar">JB</div>
+      <div>
+        <div class="preview-title" id="previewTitle">Your Job Title</div>
+        <div class="preview-meta">
+          <span class="preview-chip" id="previewLocation"><i class="bi bi-geo-alt"></i> Location</span>
+          <span class="preview-chip" id="previewSalary"><i class="bi bi-cash"></i> Salary</span>
+          <span class="preview-chip" id="previewCategory"><i class="bi bi-tag"></i> Category</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form method="post" id="postForm">
     {% csrf_token %}
 
-    <div class="mb-3">
-        <label>Job Title</label>
-        <input type="text" name="title" class="form-control" required>
+    <div class="form-card">
+
+      <!-- Basic info -->
+      <div class="form-section">
+        <div class="section-title"><i class="bi bi-info-circle"></i> Basic Information</div>
+        <div class="fields-grid">
+
+          <div class="field full">
+            <label class="field-label">Job Title <span class="req">*</span></label>
+            <div class="input-wrap">
+              <input type="text" name="title" id="titleInput"
+                class="field-input" placeholder="e.g. Senior Frontend Developer"
+                required autocomplete="off">
+              <i class="bi bi-briefcase input-icon"></i>
+            </div>
+            <div class="field-hint">Be specific — titles like "Senior React Developer" attract better candidates than "Developer".</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Location <span class="req">*</span></label>
+            <div class="input-wrap">
+              <input type="text" name="location" id="locationInput"
+                class="field-input" placeholder="e.g. New York, NY"
+                required autocomplete="off">
+              <i class="bi bi-geo-alt input-icon"></i>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Category <span class="req">*</span></label>
+            <div class="input-wrap select-wrap">
+              <select name="category" id="categoryInput" class="field-input field-select" required>
+                <option value="">— Select Category —</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+              <i class="bi bi-tag input-icon"></i>
+              <i class="bi bi-chevron-down select-arrow"></i>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-section">
+        <div class="section-title"><i class="bi bi-text-left"></i> Job Description</div>
+        <div class="field full">
+          <label class="field-label">Description <span class="req">*</span></label>
+          <div class="input-wrap">
+            <textarea name="description" id="descInput"
+              class="field-input field-textarea"
+              placeholder="Describe the role, responsibilities, requirements, and what makes this opportunity exciting…"
+              maxlength="3000"
+              required></textarea>
+            <i class="bi bi-pencil-square input-icon" style="top:1rem;transform:none;"></i>
+          </div>
+          <div class="char-row">
+            <span class="field-hint">A detailed description gets 3× more applications.</span>
+            <span class="char-count" id="descCounter">0 / 3000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compensation -->
+      <div class="form-section">
+        <div class="section-title"><i class="bi bi-cash-stack"></i> Compensation</div>
+        <div class="fields-grid">
+
+          <div class="field full">
+            <label class="field-label">Salary <span class="req">*</span></label>
+            <div class="input-wrap salary-wrap">
+              <span class="salary-prefix">$</span>
+              <input type="text" name="salary" id="salaryInput"
+                class="field-input salary-input"
+                placeholder="e.g. 80,000 — 120,000 / year"
+                required autocomplete="off">
+            </div>
+            <div class="field-hint">Jobs with a stated salary range receive significantly more applications.</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /form-card -->
+
+    <!-- Submit row -->
+    <div class="submit-row">
+      <div class="submit-note">
+        <i class="bi bi-send-check"></i>
+        Your listing will be visible to job seekers immediately after posting.
+      </div>
+      <div class="submit-actions">
+        <a href="{% url 'company_jobs' %}" class="cancel-link">Cancel</a>
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <i class="bi bi-send-fill"></i> Publish Job
+        </button>
+      </div>
     </div>
 
-    <div class="mb-3">
-        <label>Description</label>
-        <textarea name="description" class="form-control" rows="4" required></textarea>
-    </div>
+  </form>
+</div>
 
-    <div class="mb-3">
-        <label>Location</label>
-        <input type="text" name="location" class="form-control" required>
-    </div>
+<script>
+  /* ── Live preview ── */
+  const titleInput    = document.getElementById('titleInput');
+  const locationInput = document.getElementById('locationInput');
+  const salaryInput   = document.getElementById('salaryInput');
+  const categoryInput = document.getElementById('categoryInput');
 
-    <div class="mb-3">
-        <label>Salary</label>
-        <input type="text" name="salary" class="form-control" required>
-    </div>
+  const previewTitle    = document.getElementById('previewTitle');
+  const previewAvatar   = document.getElementById('previewAvatar');
+  const previewLocation = document.getElementById('previewLocation');
+  const previewSalary   = document.getElementById('previewSalary');
+  const previewCategory = document.getElementById('previewCategory');
 
-    <div class="mb-3">
-        <label>Category</label>
-        <select name="category" class="form-control" required>
-            <option value="">-- Select Category --</option>
-            {% for c in categories %}
-            <option value="{{ c.id }}">{{ c.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+  function updatePreview() {
+    const title = titleInput.value.trim();
+    previewTitle.textContent    = title || 'Your Job Title';
+    previewAvatar.textContent   = title ? title.slice(0, 2).toUpperCase() : 'JB';
+    previewLocation.innerHTML   = `<i class="bi bi-geo-alt"></i> ${locationInput.value.trim() || 'Location'}`;
+    previewSalary.innerHTML     = `<i class="bi bi-cash"></i> ${salaryInput.value.trim() || 'Salary'}`;
+    const catOpt = categoryInput.options[categoryInput.selectedIndex];
+    previewCategory.innerHTML   = `<i class="bi bi-tag"></i> ${catOpt && catOpt.value ? catOpt.text : 'Category'}`;
+  }
 
-    <button class="btn btn-primary">Post Job</button>
-</form>
+  [titleInput, locationInput, salaryInput, categoryInput].forEach(el =>
+    el.addEventListener('input', updatePreview)
+  );
+
+  /* ── Char counter ── */
+  const descInput   = document.getElementById('descInput');
+  const descCounter = document.getElementById('descCounter');
+
+  descInput.addEventListener('input', () => {
+    const len = descInput.value.length;
+    descCounter.textContent = `${len} / 3000`;
+    descCounter.classList.toggle('warn', len > 2700);
+  });
+
+  /* ── Submit state ── */
+  document.getElementById('postForm').addEventListener('submit', () => {
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Publishing…';
+    btn.disabled  = true;
+    btn.style.opacity = '.75';
+  });
+
+  /* ── Step highlighter (scroll-based feel) ── */
+  const sections = document.querySelectorAll('.form-section');
+  const stepNums = document.querySelectorAll('.step-num');
+  const stepLabels = document.querySelectorAll('.step-label');
+
+  function activateStep(i) {
+    stepNums.forEach((n, idx) => {
+      n.className = 'step-num ' + (idx < i ? 'done' : idx === i ? 'active' : 'idle');
+    });
+    stepLabels.forEach((l, idx) => {
+      l.className = 'step-label ' + (idx < i ? 'done' : idx === i ? 'active' : 'idle');
+    });
+  }
+
+  // Activate steps as fields are touched
+  titleInput.addEventListener('focus',    () => activateStep(0));
+  descInput.addEventListener('focus',     () => activateStep(1));
+  salaryInput.addEventListener('focus',   () => activateStep(2));
+  document.getElementById('submitBtn').addEventListener('mouseenter', () => activateStep(3));
+</script>
 
 {% endblock %}

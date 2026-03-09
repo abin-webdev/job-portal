@@ -1,34 +1,516 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3>{{ job.title }}</h3>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<p><b>Company:</b> {{ job.company.company_name }}</p>
-<p><b>Location:</b> {{ job.location }}</p>
-<p><b>Category:</b> {{ job.category }}</p>
-<p><b>Description:</b></p>
-<p>{{ job.description }}</p>
+  :root {
+    --bg:          #f1f4f9;
+    --surface:     #ffffff;
+    --border:      #e5e9f0;
+    --text-hi:     #0d1117;
+    --text-mid:    #5a6478;
+    --text-lo:     #9ba5b7;
+    --accent:      #1a56db;
+    --accent-soft: #eff4ff;
+    --success:     #059669;
+    --success-bg:  #ecfdf5;
+    --success-border: #a7f3d0;
+    --shadow-sm:   0 1px 4px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md:   0 4px 20px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
+    --radius:      16px;
+    --font:        'Outfit', sans-serif;
+    --mono:        'DM Mono', monospace;
+  }
 
-<hr>
+  .detail-page {
+    font-family: var(--font);
+    max-width: 860px;
+    margin: 0 auto;
+    animation: fade-up .35s ease both;
+  }
 
-{% if already_applied %}
-    <p class="text-success"><b>You have already applied for this job.</b></p>
-{% else %}
-<form action="{% url 'apply_job' job.id %}" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-    <div class="mb-3">
-        <label>Resume (optional)</label>
-        <input type="file" name="resume" class="form-control">
+  /* ── Back link ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text-lo);
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    transition: color .15s;
+    letter-spacing: .02em;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  /* ── Job hero card ── */
+  .job-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .company-logo {
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    letter-spacing: -.03em;
+    border: 1px solid rgba(26,86,219,.15);
+  }
+
+  .hero-titles { flex: 1; min-width: 0; }
+
+  .job-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    letter-spacing: -.04em;
+    line-height: 1.1;
+    margin-bottom: .3rem;
+  }
+
+  .company-name {
+    font-size: .9rem;
+    color: var(--text-mid);
+    font-weight: 500;
+  }
+
+  /* ── Meta pills row ── */
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: #f8f9fb;
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+    font-size: .76rem;
+    font-weight: 500;
+    padding: .35rem .85rem;
+    border-radius: 20px;
+  }
+
+  .meta-pill i { font-size: .85rem; color: var(--text-lo); }
+
+  .category-pill {
+    background: var(--accent-soft);
+    border-color: rgba(26,86,219,.18);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .category-pill i { color: var(--accent); }
+
+  /* ── Description card ── */
+  .desc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-lo);
+    margin-bottom: .9rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .desc-body {
+    font-size: .9rem;
+    color: var(--text-mid);
+    line-height: 1.75;
+    white-space: pre-line;
+  }
+
+  /* ── Already applied banner ── */
+  .applied-banner {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: fade-up .3s ease both;
+  }
+
+  .applied-icon {
+    width: 46px;
+    height: 46px;
+    background: #d1fae5;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: var(--success);
+    flex-shrink: 0;
+  }
+
+  .applied-text h4 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #065f46;
+    margin-bottom: .15rem;
+  }
+
+  .applied-text p {
+    font-size: .8rem;
+    color: #047857;
+    margin: 0;
+  }
+
+  /* ── Apply form card ── */
+  .apply-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: fade-up .35s .1s ease both;
+    opacity: 0;
+  }
+
+  .apply-card-header {
+    padding: 1.25rem 2rem;
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .apply-card-header h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--text-hi);
+    margin: 0;
+    letter-spacing: -.02em;
+  }
+
+  .apply-card-header i { color: var(--accent); font-size: 1rem; }
+
+  .apply-card-body { padding: 1.75rem 2rem; }
+
+  /* ── Form fields ── */
+  .field-group { margin-bottom: 1.4rem; }
+
+  .field-label {
+    font-size: .76rem;
+    font-weight: 600;
+    color: var(--text-hi);
+    letter-spacing: .02em;
+    margin-bottom: .45rem;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+  }
+
+  .field-label .optional {
+    font-size: .68rem;
+    color: var(--text-lo);
+    font-weight: 400;
+    background: #f3f4f6;
+    padding: .1rem .45rem;
+    border-radius: 4px;
+  }
+
+  .field-hint {
+    font-size: .72rem;
+    color: var(--text-lo);
+    margin-top: .35rem;
+  }
+
+  .form-control {
+    font-family: var(--font);
+    font-size: .875rem;
+    color: var(--text-hi);
+    background: #f8f9fb;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .65rem .9rem;
+    width: 100%;
+    transition: border-color .18s, box-shadow .18s, background .18s;
+    outline: none;
+  }
+
+  .form-control:focus {
+    background: var(--surface);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+  }
+
+  input[type="file"].form-control {
+    padding: .5rem .9rem;
+    cursor: pointer;
+  }
+
+  textarea.form-control { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+  /* ── File upload zone ── */
+  .file-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .18s, background .18s;
+    background: #fafbfc;
+    position: relative;
+  }
+
+  .file-zone:hover, .file-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .file-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .file-zone-icon { font-size: 1.75rem; color: var(--text-lo); margin-bottom: .4rem; }
+  .file-zone-text { font-size: .8rem; color: var(--text-mid); font-weight: 500; }
+  .file-zone-sub  { font-size: .72rem; color: var(--text-lo); margin-top: .2rem; }
+  .file-zone-name {
+    display: none;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: .4rem;
+    font-family: var(--mono);
+  }
+
+  /* ── Submit button ── */
+  .submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    margin-top: 1.5rem;
+  }
+
+  .cancel-link {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text-lo);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .cancel-link:hover { color: var(--text-mid); }
+
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: .7rem 1.6rem;
+    font-family: var(--font);
+    font-size: .875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s, transform .15s, box-shadow .18s;
+    box-shadow: 0 4px 14px rgba(26,86,219,.3);
+    letter-spacing: -.01em;
+  }
+
+  .submit-btn:hover {
+    background: #1241b0;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(26,86,219,.35);
+  }
+
+  .submit-btn:active { transform: translateY(0); }
+
+  @media (max-width: 600px) {
+    .hero-top { flex-direction: column; gap: .9rem; }
+    .job-title { font-size: 1.25rem; }
+    .apply-card-body, .desc-card, .job-hero { padding: 1.25rem; }
+    .submit-row { flex-direction: column-reverse; align-items: stretch; }
+    .submit-btn { justify-content: center; }
+  }
+</style>
+
+<div class="detail-page">
+
+  <!-- Back -->
+  <a href="{% url 'user_job_list' %}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Back to Jobs
+  </a>
+
+  <!-- Hero card -->
+  <div class="job-hero">
+    <div class="hero-top">
+      <div class="company-logo">
+        {{ job.company.company_name|slice:":2"|upper }}
+      </div>
+      <div class="hero-titles">
+        <div class="job-title">{{ job.title }}</div>
+        <div class="company-name">{{ job.company.company_name }}</div>
+      </div>
     </div>
 
-    <div class="mb-3">
-        <label>Cover Letter</label>
-        <textarea name="cover_letter" class="form-control"></textarea>
+    <div class="meta-row">
+      <span class="meta-pill">
+        <i class="bi bi-geo-alt"></i> {{ job.location }}
+      </span>
+      <span class="meta-pill category-pill">
+        <i class="bi bi-tag"></i> {{ job.category }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="desc-card">
+    <div class="section-label">Job Description</div>
+    <div class="desc-body">{{ job.description }}</div>
+  </div>
+
+  <!-- Already applied -->
+  {% if already_applied %}
+  <div class="applied-banner">
+    <div class="applied-icon"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="applied-text">
+      <h4>Application Submitted</h4>
+      <p>You've already applied for this position. We'll notify you when there's an update.</p>
+    </div>
+  </div>
+
+  <!-- Apply form -->
+  {% else %}
+  <div class="apply-card">
+    <div class="apply-card-header">
+      <i class="bi bi-send"></i>
+      <h3>Apply for this Position</h3>
     </div>
 
-    <button type="submit" class="btn btn-success">Apply Now</button>
-</form>
-{% endif %}
+    <div class="apply-card-body">
+      <form action="{% url 'apply_job' job.id %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Resume upload -->
+        <div class="field-group">
+          <div class="field-label">
+            Resume <span class="optional">optional</span>
+          </div>
+          <div class="file-zone" id="fileZone">
+            <input type="file" name="resume" id="resumeInput" accept=".pdf,.doc,.docx">
+            <div class="file-zone-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+            <div class="file-zone-text">Drop your resume here or click to browse</div>
+            <div class="file-zone-sub">PDF, DOC, DOCX up to 5 MB</div>
+            <div class="file-zone-name" id="fileName"></div>
+          </div>
+        </div>
+
+        <!-- Cover letter -->
+        <div class="field-group">
+          <div class="field-label">Cover Letter</div>
+          <textarea
+            name="cover_letter"
+            class="form-control"
+            placeholder="Tell the employer why you're a great fit for this role…"
+          ></textarea>
+          <div class="field-hint">A strong cover letter greatly improves your chances.</div>
+        </div>
+
+        <div class="submit-row">
+          <a href="{% url 'user_job_list' %}" class="cancel-link">Cancel</a>
+          <button type="submit" class="submit-btn">
+            <i class="bi bi-send-fill"></i> Submit Application
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+  // File name preview
+  const input    = document.getElementById('resumeInput');
+  const zone     = document.getElementById('fileZone');
+  const fileName = document.getElementById('fileName');
+
+  input?.addEventListener('change', () => {
+    if (input.files[0]) {
+      fileName.textContent = '📎 ' + input.files[0].name;
+      fileName.style.display = 'block';
+      zone.style.borderColor = 'var(--accent)';
+      zone.style.background  = 'var(--accent-soft)';
+    }
+  });
+
+  // Drag visual
+  zone?.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone?.addEventListener('dragleave', ()  => zone.classList.remove('dragover'));
+  zone?.addEventListener('drop',      e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) {
+      input.files = e.dataTransfer.files;
+      fileName.textContent = '📎 ' + e.dataTransfer.files[0].name;
+      fileName.style.display = 'block';
+    }
+  });
+</script>
 
 {% endblock %}

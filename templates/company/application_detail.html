@@ -1,54 +1,485 @@
 {% extends "base.html" %}
 
+{% block page_title %}Application — {{ app.user.username }}{% endblock %}
+
 {% block content %}
-<h3>Application Details</h3>
-<hr>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<table class="table table-bordered bg-white">
-    <tr>
-        <th>Applicant</th>
-        <td>{{ app.user.username }}</td>
-    </tr>
+  :root {
+    --surface:      #ffffff;
+    --bg:           #f1f4f9;
+    --border:       #e5e9f0;
+    --text-hi:      #0d1117;
+    --text-mid:     #5a6478;
+    --text-lo:      #9ba5b7;
+    --accent:       #1a56db;
+    --accent-soft:  #eff4ff;
+    --accent-dark:  #1241b0;
+    --success:      #059669;
+    --success-bg:   #ecfdf5;
+    --success-bdr:  #a7f3d0;
+    --warning:      #d97706;
+    --warning-bg:   #fffbeb;
+    --warning-bdr:  #fde68a;
+    --danger:       #dc2626;
+    --danger-bg:    #fef2f2;
+    --danger-bdr:   #fecaca;
+    --purple:       #7c3aed;
+    --purple-bg:    #f5f3ff;
+    --purple-bdr:   #ddd6fe;
+    --shadow-sm:    0 1px 4px rgba(0,0,0,.05);
+    --shadow-md:    0 4px 20px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
+    --radius:       14px;
+    --font:         'Outfit', sans-serif;
+    --mono:         'DM Mono', monospace;
+  }
 
-    <tr>
-        <th>Email</th>
-        <td>{{ app.user.email }}</td>
-    </tr>
+  .page { font-family: var(--font); max-width: 780px; margin: 0 auto; }
 
-    <tr>
-        <th>Applied At</th>
-        <td>{{ app.applied_at }}</td>
-    </tr>
+  @keyframes up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-    <tr>
-        <th>Status</th>
-        <td>{{ app.status|title }}</td>
-    </tr>
+  /* ── Back link ── */
+  .back-link {
+    display: inline-flex; align-items: center; gap: .35rem;
+    font-size: .76rem; font-weight: 600; color: var(--text-lo);
+    text-decoration: none; margin-bottom: 1.4rem;
+    letter-spacing: .02em; transition: color .15s;
+  }
+  .back-link:hover { color: var(--accent); }
 
-    <tr>
-        <th>Cover Letter</th>
-        <td>{{ app.cover_letter|linebreaks }}</td>
-    </tr>
+  /* ── Applicant hero ── */
+  .hero-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    animation: up .3s ease both;
+    position: relative; overflow: hidden;
+  }
 
-    <tr>
-        <th>Resume</th>
-        <td>
-            {% if app.resume %}
-                <a href="{{ app.resume.url }}"
-                   target="_blank"
-                   class="btn btn-secondary">
-                    Download Resume
-                </a>
-            {% else %}
-                Resume not uploaded
-            {% endif %}
-        </td>
-    </tr>
-</table>
+  .hero-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), #818cf8, #60a5fa);
+  }
 
-<a href="{% url 'company_job_applications' app.job.id %}"
-   class="btn btn-link">
-    ← Back to Applications
-</a>
+  .hero-left { display: flex; align-items: center; gap: 1.1rem; min-width: 0; }
 
+  .user-avatar {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 800; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: var(--mono);
+    border: 1px solid rgba(26,86,219,.15);
+    letter-spacing: -.02em;
+  }
+
+  .hero-eyebrow {
+    font-size: .62rem; font-weight: 700;
+    letter-spacing: .13em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .2rem;
+  }
+
+  .hero-name {
+    font-size: 1.3rem; font-weight: 800;
+    color: var(--text-hi); letter-spacing: -.04em; line-height: 1.1;
+    margin-bottom: .3rem;
+  }
+
+  .hero-email {
+    font-family: var(--mono); font-size: .76rem;
+    color: var(--text-lo); display: flex; align-items: center; gap: .35rem;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .38rem .95rem; border-radius: 20px;
+    font-size: .75rem; font-weight: 600;
+    border: 1.5px solid transparent;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  .status-badge .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  .status-badge.pending  { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-bdr); }
+  .status-badge.pending .dot { background: var(--warning); animation: pulse 1.6s ease-in-out infinite; }
+  .status-badge.approved { background: var(--success-bg); color: var(--success); border-color: var(--success-bdr); }
+  .status-badge.approved .dot { background: var(--success); }
+  .status-badge.rejected { background: var(--danger-bg);  color: var(--danger);  border-color: var(--danger-bdr); }
+  .status-badge.rejected .dot { background: var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: .4; transform: scale(.7); }
+  }
+
+  /* ── Info grid ── */
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1rem; margin-bottom: 1.25rem;
+  }
+
+  .info-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem 1.4rem;
+    box-shadow: var(--shadow-sm); animation: up .35s ease both;
+    transition: box-shadow .2s;
+  }
+
+  .info-card:hover { box-shadow: var(--shadow-md); }
+  .info-card:nth-child(1) { animation-delay: .05s; }
+  .info-card:nth-child(2) { animation-delay: .10s; }
+
+  .info-label {
+    font-size: .63rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--text-lo); margin-bottom: .5rem;
+    display: flex; align-items: center; gap: .35rem;
+  }
+
+  .info-label i { font-size: .78rem; color: var(--accent); }
+
+  .info-value { font-size: .9rem; font-weight: 600; color: var(--text-hi); line-height: 1.4; }
+  .info-value.mono { font-family: var(--mono); font-size: .82rem; }
+
+  /* ── Section card ── */
+  .section-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    overflow: hidden; margin-bottom: 1.25rem;
+    animation: up .4s ease both; opacity: 0;
+  }
+
+  .section-card:nth-of-type(1) { animation-delay: .15s; }
+  .section-card:nth-of-type(2) { animation-delay: .22s; }
+
+  .section-head {
+    padding: .9rem 1.4rem; background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: .45rem;
+    font-size: .8rem; font-weight: 700; color: var(--text-hi);
+  }
+
+  .section-head i { color: var(--accent); font-size: .9rem; }
+
+  .section-body { padding: 1.4rem; }
+
+  /* Cover letter */
+  .cover-letter-text {
+    font-size: .875rem; color: var(--text-mid);
+    line-height: 1.8; white-space: pre-line;
+  }
+
+  .cover-letter-empty {
+    display: flex; flex-direction: column;
+    align-items: center; padding: 2rem; text-align: center;
+  }
+
+  .cover-letter-empty i { font-size: 1.75rem; color: var(--text-lo); margin-bottom: .5rem; }
+  .cover-letter-empty p { font-size: .8rem; color: var(--text-lo); margin: 0; }
+
+  /* Resume */
+  .resume-row {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+
+  .resume-file { display: flex; align-items: center; gap: .85rem; }
+
+  .resume-icon {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: var(--danger-bg); color: var(--danger);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; flex-shrink: 0; border: 1px solid var(--danger-bdr);
+  }
+
+  .resume-name { font-size: .82rem; font-weight: 600; color: var(--text-hi); font-family: var(--mono); }
+  .resume-sub  { font-size: .7rem; color: var(--text-lo); margin-top: .1rem; }
+
+  .download-btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: var(--accent); color: #fff;
+    border-radius: 9px; padding: .55rem 1.15rem;
+    font-family: var(--font); font-size: .78rem; font-weight: 700;
+    text-decoration: none; white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(26,86,219,.25);
+    transition: background .18s, transform .15s, box-shadow .18s;
+  }
+
+  .download-btn:hover {
+    background: var(--accent-dark); color: #fff;
+    transform: translateY(-1px); box-shadow: 0 6px 16px rgba(26,86,219,.3);
+  }
+
+  .no-resume {
+    display: flex; align-items: center; gap: .6rem;
+    font-size: .82rem; color: var(--text-lo); padding: .6rem 0;
+  }
+
+  .no-resume i { font-size: 1rem; }
+
+  /* ── Decision row ── */
+  .action-row {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem 1.4rem;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    box-shadow: var(--shadow-sm);
+    animation: up .45s .3s ease both; opacity: 0;
+    margin-bottom: 1.25rem;
+  }
+
+  .action-left {
+    font-size: .78rem; color: var(--text-lo);
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .action-btns { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+
+  .approve-btn, .reject-btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    border-radius: 9px; padding: .58rem 1.2rem;
+    font-family: var(--font); font-size: .82rem; font-weight: 700;
+    text-decoration: none; white-space: nowrap;
+    border: 1.5px solid transparent;
+    transition: background .18s, color .18s, transform .15s, box-shadow .18s;
+  }
+
+  .approve-btn { background: var(--success-bg); color: var(--success); border-color: var(--success-bdr); }
+  .approve-btn:hover {
+    background: var(--success); color: #fff;
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(5,150,105,.25);
+  }
+
+  .reject-btn { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-bdr); }
+  .reject-btn:hover {
+    background: var(--danger); color: #fff;
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220,38,38,.22);
+  }
+
+  .decided-chip {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .78rem; font-weight: 600; color: var(--text-lo);
+    background: var(--bg); border: 1px solid var(--border);
+    padding: .45rem 1rem; border-radius: 20px;
+  }
+
+  /* ── App actions bar ── */
+  .app-actions-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.1rem 1.4rem;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    box-shadow: var(--shadow-sm);
+    animation: up .5s .38s ease both; opacity: 0;
+  }
+
+  .app-actions-label {
+    font-size: .75rem; color: var(--text-lo);
+    display: flex; align-items: center; gap: .4rem;
+    font-weight: 500;
+  }
+
+  .app-actions-label i { font-size: .8rem; color: var(--accent); opacity: .65; }
+
+  .app-actions-btns { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+
+  .btn-view {
+    display: inline-flex; align-items: center; gap: .38rem;
+    border-radius: 9px; padding: .55rem 1.15rem;
+    font-family: var(--font); font-size: .8rem; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+    background: var(--accent-soft); color: var(--accent);
+    border: 1.5px solid rgba(26,86,219,.2);
+    transition: all .18s;
+  }
+
+  .btn-view:hover {
+    background: var(--accent); color: #fff;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26,86,219,.25);
+  }
+
+  .btn-interview {
+    display: inline-flex; align-items: center; gap: .38rem;
+    border-radius: 9px; padding: .55rem 1.15rem;
+    font-family: var(--font); font-size: .8rem; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+    background: var(--purple-bg); color: var(--purple);
+    border: 1.5px solid var(--purple-bdr);
+    transition: all .18s;
+  }
+
+  .btn-interview:hover {
+    background: var(--purple); color: #fff;
+    border-color: var(--purple);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124,58,237,.25);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .hero-card    { flex-direction: column; align-items: flex-start; padding: 1.25rem; }
+    .hero-name    { font-size: 1.1rem; }
+    .info-grid    { grid-template-columns: 1fr; gap: .75rem; }
+    .resume-row   { flex-direction: column; align-items: flex-start; }
+    .download-btn { width: 100%; justify-content: center; }
+    .action-row   { flex-direction: column; align-items: stretch; }
+    .action-btns  { flex-direction: column; }
+    .approve-btn,
+    .reject-btn   { width: 100%; justify-content: center; }
+    .section-body { padding: 1.1rem; }
+    .app-actions-bar  { flex-direction: column; align-items: stretch; }
+    .app-actions-btns { flex-direction: column; }
+    .btn-view,
+    .btn-interview    { width: 100%; justify-content: center; }
+  }
+
+  @media (max-width: 400px) {
+    .hero-card   { padding: 1rem; }
+    .user-avatar { width: 46px; height: 46px; }
+    .hero-name   { font-size: 1rem; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- Back -->
+  <a href="{% url 'company_job_applications' app.job.id %}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Back to Applications
+  </a>
+
+  <!-- Applicant hero -->
+  <div class="hero-card">
+    <div class="hero-left">
+      <div class="user-avatar">{{ app.user.username|slice:":2"|upper }}</div>
+      <div>
+        <div class="hero-eyebrow">Application Detail</div>
+        <div class="hero-name">{{ app.user.username }}</div>
+        <div class="hero-email">
+          <i class="bi bi-envelope" style="color:var(--text-lo)"></i>
+          {{ app.user.email }}
+        </div>
+      </div>
+    </div>
+    <span class="status-badge {{ app.status }}">
+      <span class="dot"></span>{{ app.status|title }}
+    </span>
+  </div>
+
+  <!-- Info grid -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-label"><i class="bi bi-briefcase"></i> Applied For</div>
+      <div class="info-value">{{ app.job.title }}</div>
+    </div>
+    <div class="info-card">
+      <div class="info-label"><i class="bi bi-calendar3"></i> Applied At</div>
+      <div class="info-value mono">{{ app.applied_at|date:"d M Y, h:i A" }}</div>
+    </div>
+  </div>
+
+  <!-- Cover letter -->
+  <div class="section-card">
+    <div class="section-head">
+      <i class="bi bi-pencil-square"></i> Cover Letter
+    </div>
+    <div class="section-body">
+      {% if app.cover_letter %}
+        <div class="cover-letter-text">{{ app.cover_letter }}</div>
+      {% else %}
+        <div class="cover-letter-empty">
+          <i class="bi bi-file-earmark-x"></i>
+          <p>No cover letter was provided.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Resume -->
+  <div class="section-card">
+    <div class="section-head">
+      <i class="bi bi-file-earmark-person"></i> Resume
+    </div>
+    <div class="section-body">
+      {% if app.resume %}
+        <div class="resume-row">
+          <div class="resume-file">
+            <div class="resume-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+            <div>
+              <div class="resume-name">resume_{{ app.user.username }}.pdf</div>
+              <div class="resume-sub">Click to download or open in a new tab</div>
+            </div>
+          </div>
+          <a href="{{ app.resume.url }}" target="_blank" class="download-btn">
+            <i class="bi bi-download"></i> Download Resume
+          </a>
+        </div>
+      {% else %}
+        <div class="no-resume">
+          <i class="bi bi-cloud-slash"></i>
+          No resume was uploaded for this application.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Decision row -->
+  <div class="action-row">
+    <div class="action-left">
+      <i class="bi bi-shield-check"></i>
+      {% if app.status == "pending" %}
+        Review this application and make a decision.
+      {% else %}
+        A decision has already been made for this application.
+      {% endif %}
+    </div>
+
+    <div class="action-btns">
+      {% if app.status == "pending" %}
+        <a href="{% url 'company_approve' app.id %}" class="approve-btn">
+          <i class="bi bi-check-lg"></i> Approve
+        </a>
+        <a href="{% url 'company_reject' app.id %}" class="reject-btn">
+          <i class="bi bi-x-lg"></i> Reject
+        </a>
+      {% else %}
+        <span class="decided-chip">
+          <i class="bi bi-check2-circle"></i>
+          Decision: {{ app.status|title }}
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- App actions bar -->
+  <div class="app-actions-bar">
+    <div class="app-actions-label">
+      <i class="bi bi-lightning-charge-fill"></i>
+      Quick Actions
+    </div>
+    <div class="app-actions-btns">
+      <a href="{% url 'company_application_detail' app.id %}" class="btn-view">
+        <i class="bi bi-eye"></i> View
+      </a>
+      {% if app.status == "approved" %}
+      <a href="{% url 'schedule_interview' app.id %}" class="btn-interview">
+        <i class="bi bi-calendar2-check-fill"></i> Schedule Interview
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
 {% endblock %}

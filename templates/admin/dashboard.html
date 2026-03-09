@@ -1,87 +1,591 @@
 {% extends 'base.html' %}
 
-{% block sidebar %}
-  <a href="{% url 'admin_dashboard' %}">
-    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-  </a>
-  <a href="{% url 'admin_job_list' %}">
-    <i class="bi bi-briefcase me-2"></i> Jobs
-  </a>
-  <a href="{% url 'admin_applications' %}">
-    <i class="bi bi-file-earmark-text me-2"></i> Applications
-  </a>
-  <a href="{% url 'admin_users' %}">
-    <i class="bi bi-people me-2"></i> Users
-  </a>
-  <a href="{% url 'admin_companies' %}">
-    <i class="bi bi-building me-2"></i> Companies
-  </a>
-{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<h3 class="mb-4 fw-bold">Admin Dashboard</h3>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<div class="row g-4">
+  :root {
+    --surface:      #ffffff;
+    --bg:           #f1f4f9;
+    --border:       #e5e9f0;
+    --text-hi:      #0d1117;
+    --text-mid:     #5a6478;
+    --text-lo:      #9ba5b7;
+    --accent:       #1a56db;
+    --accent-soft:  #eff4ff;
+    --accent-dark:  #1241b0;
+    --success:      #059669;
+    --success-bg:   #ecfdf5;
+    --warning:      #d97706;
+    --warning-bg:   #fffbeb;
+    --danger:       #dc2626;
+    --danger-bg:    #fef2f2;
+    --info:         #0891b2;
+    --info-bg:      #ecfeff;
+    --purple:       #7c3aed;
+    --purple-bg:    #f5f3ff;
+    --shadow-sm:    0 1px 4px rgba(0,0,0,.05);
+    --shadow-md:    0 4px 20px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
+    --shadow-lg:    0 8px 32px rgba(0,0,0,.1),  0 4px 12px rgba(0,0,0,.06);
+    --radius:       16px;
+    --font:         'Outfit', sans-serif;
+    --mono:         'DM Mono', monospace;
+  }
 
-  <!-- Jobs -->
-  <div class="col-lg-3 col-md-6">
-    <div class="card shadow border-0 h-100">
-      <div class="card-body d-flex align-items-center">
-        <div class="bg-primary text-white rounded-circle p-3 me-3">
-          <i class="bi bi-briefcase fs-4"></i>
-        </div>
-        <div>
-          <h6 class="text-muted mb-1">Total Jobs</h6>
-          <h4 class="fw-bold mb-0">{{ total_jobs }}</h4>
-        </div>
+  .dash { font-family: var(--font); max-width: 1100px; margin: 0 auto; }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(6px) scale(.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Welcome banner ── */
+  .welcome-banner {
+    background: #0b0f1a;
+    border-radius: var(--radius);
+    padding: 2rem 2.25rem;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative; overflow: hidden;
+    animation: up .35s ease both;
+  }
+
+  .welcome-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 80% at 0% 50%,  rgba(26,86,219,.35) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 100% 50%, rgba(124,58,237,.2)  0%, transparent 55%);
+    animation: mesh 10s ease-in-out infinite alternate;
+  }
+
+  @keyframes mesh {
+    from { opacity: .8; transform: scale(1); }
+    to   { opacity: 1;  transform: scale(1.04) rotate(.5deg); }
+  }
+
+  .welcome-banner::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 26px 26px;
+  }
+
+  .banner-text { position: relative; z-index: 2; }
+
+  .banner-eyebrow {
+    font-size: .65rem; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(255,255,255,.35); margin-bottom: .4rem;
+  }
+
+  .banner-title {
+    font-size: 1.65rem; font-weight: 800;
+    color: #fff; letter-spacing: -.04em;
+    line-height: 1.1; margin-bottom: .4rem;
+  }
+
+  .banner-title span {
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .banner-sub {
+    font-size: .8rem; color: rgba(255,255,255,.38);
+    line-height: 1.5;
+  }
+
+  .banner-right {
+    position: relative; z-index: 2;
+    display: flex; gap: 1.5rem; flex-shrink: 0;
+  }
+
+  .banner-stat { text-align: center; }
+
+  .banner-stat-val {
+    font-family: var(--mono);
+    font-size: 1.6rem; font-weight: 500;
+    color: #fff; letter-spacing: -.04em; line-height: 1;
+  }
+
+  .banner-stat-lbl {
+    font-size: .62rem; color: rgba(255,255,255,.3);
+    text-transform: uppercase; letter-spacing: .07em;
+    margin-top: .2rem;
+  }
+
+  .banner-divider {
+    width: 1px; background: rgba(255,255,255,.08);
+    align-self: stretch;
+  }
+
+  /* ── Stats grid ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem; margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: 1rem;
+    cursor: pointer;
+    transition: box-shadow .22s, transform .22s, border-color .22s;
+    animation: up .35s ease both;
+    position: relative; overflow: hidden;
+    text-decoration: none;
+  }
+
+  .stat-card::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 3px;
+    border-radius: 0 0 var(--radius) var(--radius);
+    transition: opacity .2s;
+  }
+
+  .stat-card.jobs    ::after,
+  .stat-card.jobs    { --bar: var(--accent); }
+  .stat-card.users   { --bar: var(--success); }
+  .stat-card.apps    { --bar: var(--warning); }
+  .stat-card.companies { --bar: var(--purple); }
+
+  .stat-card::after { background: var(--bar); opacity: .6; }
+  .stat-card:hover::after { opacity: 1; }
+
+  .stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    border-color: rgba(0,0,0,.08);
+  }
+
+  .stat-card:nth-child(1) { animation-delay: .05s; }
+  .stat-card:nth-child(2) { animation-delay: .10s; }
+  .stat-card:nth-child(3) { animation-delay: .15s; }
+  .stat-card:nth-child(4) { animation-delay: .20s; }
+
+  .stat-top {
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+
+  .stat-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+
+  .stat-icon.jobs      { background: var(--accent-soft); color: var(--accent); }
+  .stat-icon.users     { background: var(--success-bg);  color: var(--success); }
+  .stat-icon.apps      { background: var(--warning-bg);  color: var(--warning); }
+  .stat-icon.companies { background: var(--purple-bg);   color: var(--purple); }
+
+  .stat-arrow {
+    color: var(--text-lo); font-size: .85rem;
+    transition: color .18s, transform .18s;
+  }
+
+  .stat-card:hover .stat-arrow {
+    color: var(--accent); transform: translateX(3px);
+  }
+
+  .stat-val {
+    font-size: 2.2rem; font-weight: 800;
+    color: var(--text-hi); font-family: var(--mono);
+    letter-spacing: -.05em; line-height: 1;
+    animation: count-up .5s ease both;
+  }
+
+  .stat-card:nth-child(1) .stat-val { animation-delay: .15s; }
+  .stat-card:nth-child(2) .stat-val { animation-delay: .22s; }
+  .stat-card:nth-child(3) .stat-val { animation-delay: .29s; }
+  .stat-card:nth-child(4) .stat-val { animation-delay: .36s; }
+
+  .stat-lbl {
+    font-size: .7rem; font-weight: 500;
+    color: var(--text-lo); text-transform: uppercase;
+    letter-spacing: .07em; margin-top: .2rem;
+  }
+
+  /* ── Bottom grid ── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    animation: up .4s .25s ease both;
+    opacity: 0;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 1rem 1.4rem;
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-head h3 {
+    font-size: .86rem; font-weight: 700;
+    color: var(--text-hi); margin: 0;
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .panel-head h3 i { color: var(--accent); }
+
+  .panel-link {
+    font-size: .72rem; font-weight: 600;
+    color: var(--accent); text-decoration: none;
+    transition: color .15s;
+  }
+
+  .panel-link:hover { color: var(--accent-dark); }
+
+  .panel-body { padding: 1.25rem 1.4rem; }
+
+  /* ── Quick nav ── */
+  .quick-nav { display: flex; flex-direction: column; gap: .55rem; }
+
+  .qn-item {
+    display: flex; align-items: center;
+    gap: .85rem; padding: .85rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 11px; text-decoration: none;
+    background: #fafbfc;
+    transition: border-color .18s, background .18s, transform .15s;
+  }
+
+  .qn-item:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateX(3px);
+  }
+
+  .qn-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; flex-shrink: 0;
+    transition: transform .18s;
+  }
+
+  .qn-item:hover .qn-icon { transform: scale(1.1); }
+
+  .qn-icon.blue   { background: var(--accent-soft); color: var(--accent); }
+  .qn-icon.green  { background: var(--success-bg);  color: var(--success); }
+  .qn-icon.orange { background: var(--warning-bg);  color: var(--warning); }
+  .qn-icon.purple { background: var(--purple-bg);   color: var(--purple); }
+  .qn-icon.red    { background: var(--danger-bg);   color: var(--danger); }
+
+  .qn-text { flex: 1; min-width: 0; }
+  .qn-title { font-size: .82rem; font-weight: 600; color: var(--text-hi); }
+  .qn-sub   { font-size: .69rem; color: var(--text-lo); margin-top: .08rem; }
+
+  .qn-count {
+    font-family: var(--mono); font-size: .72rem;
+    color: var(--text-lo); background: var(--bg);
+    border: 1px solid var(--border);
+    padding: .15rem .5rem; border-radius: 20px;
+  }
+
+  .qn-arrow { color: var(--text-lo); font-size: .8rem; transition: color .15s, transform .15s; }
+  .qn-item:hover .qn-arrow { color: var(--accent); transform: translateX(2px); }
+
+  /* ── Platform health ── */
+  .health-list { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .health-item { }
+
+  .health-row {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: .38rem;
+  }
+
+  .health-label {
+    font-size: .76rem; font-weight: 600;
+    color: var(--text-mid);
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .health-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+
+  .health-pct {
+    font-family: var(--mono); font-size: .73rem;
+    color: var(--text-lo); font-weight: 500;
+  }
+
+  .bar-track {
+    height: 7px; background: var(--border);
+    border-radius: 4px; overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%; border-radius: 4px;
+    animation: bar-grow .9s ease both;
+  }
+
+  @keyframes bar-grow { from { width: 0 !important; } }
+
+  .bar-fill.jobs      { background: var(--accent); }
+  .bar-fill.users     { background: var(--success); }
+  .bar-fill.apps      { background: var(--warning); }
+  .bar-fill.companies { background: var(--purple); }
+
+  /* ═══════════════════════
+     RESPONSIVE
+  ═══════════════════════ */
+  @media (max-width: 1024px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .banner-right { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    .welcome-banner { padding: 1.5rem; }
+    .banner-title   { font-size: 1.35rem; }
+    .bottom-grid    { grid-template-columns: 1fr; }
+    .stats-grid     { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid     { gap: .6rem; }
+    .stat-card      { padding: 1.1rem; }
+    .stat-val       { font-size: 1.7rem; }
+    .stat-icon      { width: 38px; height: 38px; font-size: 1rem; }
+    .welcome-banner { padding: 1.25rem; }
+    .banner-title   { font-size: 1.15rem; }
+    .panel-body     { padding: 1rem; }
+  }
+</style>
+
+<div class="dash">
+
+  <!-- Welcome banner -->
+  <div class="welcome-banner">
+    <div class="banner-text">
+      <div class="banner-eyebrow">Admin Control Panel</div>
+      <div class="banner-title">Good to see you,<br><span>Platform Overview</span></div>
+      <div class="banner-sub">Here's everything happening on your platform right now.</div>
+    </div>
+    <div class="banner-right">
+      <div class="banner-stat">
+        <div class="banner-stat-val">{{ total_jobs }}</div>
+        <div class="banner-stat-lbl">Jobs</div>
+      </div>
+      <div class="banner-divider"></div>
+      <div class="banner-stat">
+        <div class="banner-stat-val">{{ total_users }}</div>
+        <div class="banner-stat-lbl">Users</div>
+      </div>
+      <div class="banner-divider"></div>
+      <div class="banner-stat">
+        <div class="banner-stat-val">{{ total_applications }}</div>
+        <div class="banner-stat-lbl">Apps</div>
+      </div>
+      <div class="banner-divider"></div>
+      <div class="banner-stat">
+        <div class="banner-stat-val">{{ total_companies }}</div>
+        <div class="banner-stat-lbl">Companies</div>
       </div>
     </div>
   </div>
 
-  <!-- Users -->
-  <div class="col-lg-3 col-md-6">
-    <div class="card shadow border-0 h-100">
-      <div class="card-body d-flex align-items-center">
-        <div class="bg-success text-white rounded-circle p-3 me-3">
-          <i class="bi bi-people fs-4"></i>
-        </div>
-        <div>
-          <h6 class="text-muted mb-1">Users</h6>
-          <h4 class="fw-bold mb-0">{{ total_users }}</h4>
+  <!-- Stats grid -->
+  <div class="stats-grid">
+
+    <a href="{% url 'admin_job_list' %}" class="stat-card jobs">
+      <div class="stat-top">
+        <div class="stat-icon jobs"><i class="bi bi-briefcase"></i></div>
+        <i class="bi bi-arrow-right stat-arrow"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ total_jobs }}</div>
+        <div class="stat-lbl">Total Jobs</div>
+      </div>
+    </a>
+
+    <a href="{% url 'admin_users' %}" class="stat-card users">
+      <div class="stat-top">
+        <div class="stat-icon users"><i class="bi bi-people"></i></div>
+        <i class="bi bi-arrow-right stat-arrow"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ total_users }}</div>
+        <div class="stat-lbl">Registered Users</div>
+      </div>
+    </a>
+
+    <a href="{% url 'admin_applications' %}" class="stat-card apps">
+      <div class="stat-top">
+        <div class="stat-icon apps"><i class="bi bi-file-earmark-text"></i></div>
+        <i class="bi bi-arrow-right stat-arrow"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ total_applications }}</div>
+        <div class="stat-lbl">Applications</div>
+      </div>
+    </a>
+
+    <a href="{% url 'admin_companies' %}" class="stat-card companies">
+      <div class="stat-top">
+        <div class="stat-icon companies"><i class="bi bi-building"></i></div>
+        <i class="bi bi-arrow-right stat-arrow"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ total_companies }}</div>
+        <div class="stat-lbl">Companies</div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Bottom panels -->
+  <div class="bottom-grid">
+
+    <!-- Quick navigation -->
+    <div class="panel">
+      <div class="panel-head">
+        <h3><i class="bi bi-lightning-charge"></i> Quick Navigation</h3>
+      </div>
+      <div class="panel-body">
+        <div class="quick-nav">
+
+          <a href="{% url 'admin_job_list' %}" class="qn-item">
+            <div class="qn-icon blue"><i class="bi bi-briefcase"></i></div>
+            <div class="qn-text">
+              <div class="qn-title">Manage Jobs</div>
+              <div class="qn-sub">View, search and delete listings</div>
+            </div>
+            <span class="qn-count">{{ total_jobs }}</span>
+            <i class="bi bi-chevron-right qn-arrow"></i>
+          </a>
+
+          <a href="{% url 'admin_users' %}" class="qn-item">
+            <div class="qn-icon green"><i class="bi bi-people"></i></div>
+            <div class="qn-text">
+              <div class="qn-title">Manage Users</div>
+              <div class="qn-sub">Search and remove user accounts</div>
+            </div>
+            <span class="qn-count">{{ total_users }}</span>
+            <i class="bi bi-chevron-right qn-arrow"></i>
+          </a>
+
+          <a href="{% url 'admin_applications' %}" class="qn-item">
+            <div class="qn-icon orange"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="qn-text">
+              <div class="qn-title">Applications</div>
+              <div class="qn-sub">Review all submitted applications</div>
+            </div>
+            <span class="qn-count">{{ total_applications }}</span>
+            <i class="bi bi-chevron-right qn-arrow"></i>
+          </a>
+
+          <a href="{% url 'admin_companies' %}" class="qn-item">
+            <div class="qn-icon purple"><i class="bi bi-building"></i></div>
+            <div class="qn-text">
+              <div class="qn-title">Companies</div>
+              <div class="qn-sub">Manage registered companies</div>
+            </div>
+            <span class="qn-count">{{ total_companies }}</span>
+            <i class="bi bi-chevron-right qn-arrow"></i>
+          </a>
+
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Applications -->
-  <div class="col-lg-3 col-md-6">
-    <div class="card shadow border-0 h-100">
-      <div class="card-body d-flex align-items-center">
-        <div class="bg-warning text-dark rounded-circle p-3 me-3">
-          <i class="bi bi-file-earmark-text fs-4"></i>
-        </div>
-        <div>
-          <h6 class="text-muted mb-1">Applications</h6>
-          <h4 class="fw-bold mb-0">{{ total_applications }}</h4>
+    <!-- Platform health -->
+    <div class="panel">
+      <div class="panel-head">
+        <h3><i class="bi bi-bar-chart"></i> Platform Overview</h3>
+      </div>
+      <div class="panel-body">
+        <div class="health-list">
+
+          {% with grand_total=total_jobs|add:total_users|add:total_applications|add:total_companies %}
+
+          <div class="health-item">
+            <div class="health-row">
+              <span class="health-label">
+                <span class="health-dot" style="background:var(--accent)"></span> Jobs
+              </span>
+              <span class="health-pct">{{ total_jobs }}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill jobs"
+                style="width:{% if grand_total %}{% widthratio total_jobs grand_total 100 %}%{% else %}0%{% endif %}">
+              </div>
+            </div>
+          </div>
+
+          <div class="health-item">
+            <div class="health-row">
+              <span class="health-label">
+                <span class="health-dot" style="background:var(--success)"></span> Users
+              </span>
+              <span class="health-pct">{{ total_users }}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill users"
+                style="width:{% if grand_total %}{% widthratio total_users grand_total 100 %}%{% else %}0%{% endif %}">
+              </div>
+            </div>
+          </div>
+
+          <div class="health-item">
+            <div class="health-row">
+              <span class="health-label">
+                <span class="health-dot" style="background:var(--warning)"></span> Applications
+              </span>
+              <span class="health-pct">{{ total_applications }}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill apps"
+                style="width:{% if grand_total %}{% widthratio total_applications grand_total 100 %}%{% else %}0%{% endif %}">
+              </div>
+            </div>
+          </div>
+
+          <div class="health-item">
+            <div class="health-row">
+              <span class="health-label">
+                <span class="health-dot" style="background:var(--purple)"></span> Companies
+              </span>
+              <span class="health-pct">{{ total_companies }}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill companies"
+                style="width:{% if grand_total %}{% widthratio total_companies grand_total 100 %}%{% else %}0%{% endif %}">
+              </div>
+            </div>
+          </div>
+
+          {% endwith %}
+
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Companies -->
-  <div class="col-lg-3 col-md-6">
-    <div class="card shadow border-0 h-100">
-      <div class="card-body d-flex align-items-center">
-        <div class="bg-danger text-white rounded-circle p-3 me-3">
-          <i class="bi bi-building fs-4"></i>
-        </div>
-        <div>
-          <h6 class="text-muted mb-1">Companies</h6>
-          <h4 class="fw-bold mb-0">{{ total_companies }}</h4>
-        </div>
-      </div>
-    </div>
   </div>
-
 </div>
 {% endblock %}

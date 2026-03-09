@@ -1,36 +1,539 @@
 {% extends 'base.html' %}
 
-{% block sidebar %}
-  <a href="{% url 'admin_dashboard' %}">Dashboard</a>
-  <a href="{% url 'admin_job_list' %}">Jobs</a>
-  <a href="{% url 'admin_applications' %}">Applications</a>
-  <a href="{% url 'admin_users' %}">Users</a>
-  <a href="{% url 'admin_employees' %}">Employees</a>
-  <a href="{% url 'admin_statistics' %}">Statistics</a>
-{% endblock %}
+{% block page_title %}Applications — Admin{% endblock %}
 
 {% block content %}
-<h3>Applications</h3>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<table class="table table-bordered bg-white shadow">
-  <tr>
-    <th>Applicant</th>
-    <th>Job</th>
-    <th>Status</th>
-    <th>Applied At</th>
-  </tr>
+  :root {
+    --surface:      #ffffff;
+    --bg:           #f1f4f9;
+    --border:       #e5e9f0;
+    --text-hi:      #0d1117;
+    --text-mid:     #5a6478;
+    --text-lo:      #9ba5b7;
+    --accent:       #1a56db;
+    --accent-soft:  #eff4ff;
+    --accent-dark:  #1241b0;
+    --success:      #059669;
+    --success-bg:   #ecfdf5;
+    --success-bdr:  #a7f3d0;
+    --warning:      #d97706;
+    --warning-bg:   #fffbeb;
+    --warning-bdr:  #fde68a;
+    --danger:       #dc2626;
+    --danger-bg:    #fef2f2;
+    --danger-bdr:   #fecaca;
+    --shadow-sm:    0 1px 4px rgba(0,0,0,.05);
+    --shadow-md:    0 4px 20px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
+    --radius:       14px;
+    --font:         'Outfit', sans-serif;
+    --mono:         'DM Mono', monospace;
+  }
+
+  .page { font-family: var(--font); max-width: 1050px; margin: 0 auto; }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Page header ── */
+  .page-head {
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: up .3s ease both;
+  }
+
+  .head-eyebrow {
+    font-size: .63rem; font-weight: 700;
+    letter-spacing: .13em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .3rem;
+  }
+
+  .head-title {
+    font-size: 1.65rem; font-weight: 800;
+    color: var(--text-hi); letter-spacing: -.04em;
+    line-height: 1; margin: 0;
+  }
+
+  /* Search + Filter row */
+  .controls-row {
+    display: flex; align-items: center; gap: .65rem;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: .58rem .9rem;
+    display: flex; align-items: center; gap: .55rem;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .2s, box-shadow .2s;
+    min-width: 220px;
+  }
+
+  .search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+  }
+
+  .search-wrap i { color: var(--text-lo); font-size: .88rem; flex-shrink: 0; }
+
+  .search-input {
+    border: none; outline: none; background: transparent;
+    font-family: var(--font); font-size: .82rem;
+    color: var(--text-hi); width: 100%;
+  }
+
+  .search-input::placeholder { color: var(--text-lo); }
+
+  /* Filter chips */
+  .filter-chips { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .38rem .8rem; border-radius: 20px;
+    font-size: .72rem; font-weight: 600; cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text-mid);
+    transition: background .15s, border-color .15s, color .15s;
+    user-select: none;
+  }
+
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .chip.active-chip {
+    background: var(--accent-soft);
+    border-color: var(--accent); color: var(--accent);
+  }
+
+  .chip.approved.active-chip { background: var(--success-bg); border-color: var(--success-bdr); color: var(--success); }
+  .chip.pending.active-chip  { background: var(--warning-bg); border-color: var(--warning-bdr); color: var(--warning); }
+  .chip.rejected.active-chip { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger);  }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .9rem; margin-bottom: 1.5rem;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    display: flex; align-items: center; gap: .8rem;
+    box-shadow: var(--shadow-sm);
+    animation: up .3s ease both;
+    transition: box-shadow .2s, transform .2s;
+  }
+
+  .stat-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .stat-box:nth-child(1) { animation-delay: .05s; }
+  .stat-box:nth-child(2) { animation-delay: .10s; }
+  .stat-box:nth-child(3) { animation-delay: .15s; }
+  .stat-box:nth-child(4) { animation-delay: .20s; }
+
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+
+  .stat-icon.all      { background: var(--accent-soft); color: var(--accent); }
+  .stat-icon.approved { background: var(--success-bg);  color: var(--success); }
+  .stat-icon.pending  { background: var(--warning-bg);  color: var(--warning); }
+  .stat-icon.rejected { background: var(--danger-bg);   color: var(--danger); }
+
+  .stat-val {
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--text-hi); font-family: var(--mono);
+    letter-spacing: -.04em; line-height: 1;
+  }
+
+  .stat-lbl {
+    font-size: .65rem; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: .06em;
+    font-weight: 500; margin-top: .1rem;
+  }
+
+  /* ── Main card ── */
+  .main-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: up .35s .2s ease both;
+    opacity: 0;
+  }
+
+  .card-head {
+    padding: 1rem 1.5rem;
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .card-head h2 {
+    font-size: .88rem; font-weight: 700;
+    color: var(--text-hi); margin: 0;
+    display: flex; align-items: center; gap: .45rem;
+  }
+
+  .card-head h2 i { color: var(--accent); }
+
+  .count-chip {
+    font-family: var(--mono); font-size: .7rem;
+    color: var(--text-mid); background: var(--bg);
+    border: 1px solid var(--border);
+    padding: .18rem .6rem; border-radius: 20px;
+  }
+
+  /* ── Column headers ── */
+  .col-headers {
+    display: grid;
+    grid-template-columns: 1.8fr 1.8fr 1fr 1.2fr;
+    gap: 1rem;
+    padding: .6rem 1.5rem;
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-hdr {
+    font-size: .62rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .09em;
+    color: var(--text-lo);
+  }
+
+  /* ── App row ── */
+  .app-row {
+    display: grid;
+    grid-template-columns: 1.8fr 1.8fr 1fr 1.2fr;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+    animation: up .3s ease both;
+  }
+
+  .app-row:last-child { border-bottom: none; }
+  .app-row:hover { background: #fafbfc; }
 
   {% for app in applications %}
-  <tr>
-    <td>{{ app.user.username }}</td>
-    <td>{{ app.job.title }}</td>
-    <td>{{ app.status }}</td>
-    <td>{{ app.applied_at }}</td>
-  </tr>
-  {% empty %}
-  <tr>
-    <td colspan="5">No applications.</td>
-  </tr>
+  .app-row:nth-child({{ forloop.counter }}) { animation-delay: {{ forloop.counter0 }}0ms; }
   {% endfor %}
-</table>
+
+  /* Applicant cell */
+  .applicant-cell { display: flex; align-items: center; gap: .8rem; min-width: 0; }
+
+  .user-avatar {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; font-size: .74rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: var(--mono);
+    border: 1px solid rgba(26,86,219,.13);
+  }
+
+  .user-name {
+    font-size: .87rem; font-weight: 600;
+    color: var(--text-hi); letter-spacing: -.02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: .1rem;
+  }
+
+  .user-email {
+    font-size: .7rem; color: var(--text-lo);
+    font-family: var(--mono);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Job cell */
+  .job-cell { display: flex; align-items: center; gap: .6rem; min-width: 0; }
+
+  .job-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0; opacity: .35;
+  }
+
+  .job-title {
+    font-size: .84rem; font-weight: 500; color: var(--text-mid);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .28rem .75rem; border-radius: 20px;
+    font-size: .71rem; font-weight: 600;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+
+  .status-badge .dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  .status-badge.approved { background: var(--success-bg); color: var(--success); border-color: var(--success-bdr); }
+  .status-badge.approved .dot { background: var(--success); }
+  .status-badge.pending  { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-bdr); }
+  .status-badge.pending .dot  { background: var(--warning); animation: pulse 1.6s ease-in-out infinite; }
+  .status-badge.rejected { background: var(--danger-bg);  color: var(--danger);  border-color: var(--danger-bdr); }
+  .status-badge.rejected .dot { background: var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: .4; transform: scale(.7); }
+  }
+
+  /* Date cell */
+  .date-cell {
+    font-family: var(--mono); font-size: .74rem;
+    color: var(--text-lo);
+  }
+
+  .date-day  { color: var(--text-mid); font-weight: 500; font-size: .8rem; }
+  .date-time { font-size: .68rem; margin-top: .08rem; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    padding: 5rem 2rem; text-align: center;
+  }
+
+  .empty-icon {
+    width: 64px; height: 64px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem; color: var(--text-lo);
+    margin: 0 auto 1.1rem;
+  }
+
+  .empty-state h3 {
+    font-size: .98rem; font-weight: 700;
+    color: var(--text-hi); margin-bottom: .35rem;
+  }
+
+  .empty-state p { font-size: .8rem; color: var(--text-lo); margin: 0; }
+
+  /* ═══════════════════════
+     RESPONSIVE
+  ═══════════════════════ */
+  @media (max-width: 900px) {
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .col-headers { display: none; }
+
+    .app-row {
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto auto;
+      gap: .4rem .75rem;
+      padding: 1rem 1.25rem;
+    }
+
+    .applicant-cell { grid-column: 1; grid-row: 1; }
+    .status-badge   { grid-column: 2; grid-row: 1; align-self: start; margin-top: .2rem; }
+    .job-cell       { grid-column: 1; grid-row: 2; }
+    .date-cell      { grid-column: 1; grid-row: 3; }
+  }
+
+  @media (max-width: 540px) {
+    .stats-strip  { grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .page-head    { flex-direction: column; align-items: flex-start; }
+    .controls-row { width: 100%; }
+    .search-wrap  { width: 100%; min-width: unset; flex: 1; }
+    .card-head    { padding: .85rem 1.1rem; }
+    .app-row      { padding: .9rem 1rem; }
+    .user-avatar  { width: 34px; height: 34px; font-size: .68rem; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-head">
+    <div>
+      <div class="head-eyebrow">Admin Panel</div>
+      <h1 class="head-title">Applications</h1>
+    </div>
+    <div class="controls-row">
+      <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input class="search-input" type="text" id="searchInput"
+          placeholder="Search applicant or job…">
+      </div>
+      <div class="filter-chips">
+        <span class="chip active-chip" data-filter="all">All</span>
+        <span class="chip approved" data-filter="approved">Approved</span>
+        <span class="chip pending"  data-filter="pending">Pending</span>
+        <span class="chip rejected" data-filter="rejected">Rejected</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-strip">
+    <div class="stat-box">
+      <div class="stat-icon all"><i class="bi bi-layers"></i></div>
+      <div>
+        <div class="stat-val">{{ applications|length }}</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon approved"><i class="bi bi-check-circle"></i></div>
+      <div>
+        <div class="stat-val" id="approvedCount">—</div>
+        <div class="stat-lbl">Approved</div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon pending"><i class="bi bi-clock"></i></div>
+      <div>
+        <div class="stat-val" id="pendingCount">—</div>
+        <div class="stat-lbl">Pending</div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon rejected"><i class="bi bi-x-circle"></i></div>
+      <div>
+        <div class="stat-val" id="rejectedCount">—</div>
+        <div class="stat-lbl">Rejected</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Applications card -->
+  <div class="main-card">
+    <div class="card-head">
+      <h2><i class="bi bi-file-earmark-text"></i> All Applications</h2>
+      <span class="count-chip" id="visibleCount">{{ applications|length }} total</span>
+    </div>
+
+    <div class="col-headers">
+      <div class="col-hdr">Applicant</div>
+      <div class="col-hdr">Job</div>
+      <div class="col-hdr">Status</div>
+      <div class="col-hdr">Applied At</div>
+    </div>
+
+    {% for app in applications %}
+    <div class="app-row"
+      data-user="{{ app.user.username|lower }}"
+      data-job="{{ app.job.title|lower }}"
+      data-status="{{ app.status|lower }}">
+
+      <!-- Applicant -->
+      <div class="applicant-cell">
+        <div class="user-avatar">{{ app.user.username|slice:":2"|upper }}</div>
+        <div>
+          <div class="user-name">{{ app.user.username }}</div>
+          <div class="user-email">{{ app.user.email|default:"—" }}</div>
+        </div>
+      </div>
+
+      <!-- Job -->
+      <div class="job-cell">
+        <span class="job-dot"></span>
+        <span class="job-title">{{ app.job.title }}</span>
+      </div>
+
+      <!-- Status -->
+      <span class="status-badge {{ app.status|lower }}">
+        <span class="dot"></span>{{ app.status|title }}
+      </span>
+
+      <!-- Date -->
+      <div class="date-cell">
+        <div class="date-day">{{ app.applied_at|date:"d M Y" }}</div>
+        <div class="date-time">{{ app.applied_at|date:"h:i A" }}</div>
+      </div>
+
+    </div>
+    {% empty %}
+
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+      <h3>No applications yet</h3>
+      <p>Applications will appear here once job seekers start applying.</p>
+    </div>
+
+    {% endfor %}
+
+    <div class="empty-state" id="noResults" style="display:none;">
+      <div class="empty-icon"><i class="bi bi-search"></i></div>
+      <h3>No results</h3>
+      <p>No applications match your search or filter.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const rows         = document.querySelectorAll('.app-row');
+  const searchInput  = document.getElementById('searchInput');
+  const noResults    = document.getElementById('noResults');
+  const visibleCount = document.getElementById('visibleCount');
+  const chips        = document.querySelectorAll('.chip');
+  const total        = {{ applications|length }};
+
+  let currentFilter = 'all';
+  let currentSearch = '';
+
+  /* ── Count by status from DOM ── */
+  let counts = { approved: 0, pending: 0, rejected: 0 };
+  rows.forEach(r => {
+    const s = r.dataset.status;
+    if (counts[s] !== undefined) counts[s]++;
+  });
+
+  document.getElementById('approvedCount').textContent = counts.approved;
+  document.getElementById('pendingCount').textContent  = counts.pending;
+  document.getElementById('rejectedCount').textContent = counts.rejected;
+
+  /* ── Filter logic ── */
+  function applyFilters() {
+    let visible = 0;
+
+    rows.forEach(row => {
+      const matchSearch =
+        row.dataset.user.includes(currentSearch) ||
+        row.dataset.job.includes(currentSearch);
+      const matchFilter =
+        currentFilter === 'all' || row.dataset.status === currentFilter;
+
+      const show = matchSearch && matchFilter;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    noResults.style.display  = visible === 0 ? 'block' : 'none';
+    visibleCount.textContent = currentSearch || currentFilter !== 'all'
+      ? `${visible} of ${total}`
+      : `${total} total`;
+  }
+
+  /* ── Search ── */
+  searchInput.addEventListener('input', () => {
+    currentSearch = searchInput.value.toLowerCase().trim();
+    applyFilters();
+  });
+
+  /* ── Filter chips ── */
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active-chip'));
+      chip.classList.add('active-chip');
+      currentFilter = chip.dataset.filter;
+      applyFilters();
+    });
+  });
+</script>
+
 {% endblock %}

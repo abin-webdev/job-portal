@@ -7,40 +7,424 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-  <h3 class="mb-3 fw-bold">User Dashboard</h3>
-  <p class="text-muted">Recent Applications</p>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #f8f9fb;
+    --border: #e8eaed;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --success: #059669;
+    --success-bg: #ecfdf5;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.04);
+  }
 
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover bg-white shadow-sm align-middle">
-      <thead class="table-light">
+  .dash-wrapper {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 2.5rem 2rem;
+  }
+
+  /* ── Header ── */
+  .dash-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .dash-header-left .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.35rem;
+  }
+
+  .dash-header-left h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .dash-header-right .browse-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.2rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.18s, transform 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  .dash-header-right .browse-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+  }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: box-shadow 0.2s;
+  }
+
+  .stat-card:hover { box-shadow: var(--shadow-md); }
+
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .stat-icon.total  { background: var(--accent-light);  color: var(--accent);  }
+  .stat-icon.ok     { background: var(--success-bg);    color: var(--success); }
+  .stat-icon.pend   { background: var(--warning-bg);    color: var(--warning); }
+
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  /* ── Table card ── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+
+  .table-card-header {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .table-card-header h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .count-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+  }
+
+  /* ── Table ── */
+  .apps-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .apps-table thead th {
+    padding: 0.75rem 1.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .apps-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .apps-table tbody tr:last-child { border-bottom: none; }
+  .apps-table tbody tr:hover { background: var(--surface-2); }
+
+  .apps-table tbody td {
+    padding: 1.1rem 1.75rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+
+  /* ── Job cell ── */
+  .job-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .job-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .job-title {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  /* ── Status badges ── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: capitalize;
+  }
+
+  .status-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-badge.approved {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+  .status-badge.approved::before { background: var(--success); }
+
+  .status-badge.rejected {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+  .status-badge.rejected::before { background: var(--danger); }
+
+  .status-badge.pending {
+    background: var(--warning-bg);
+    color: var(--warning);
+  }
+  .status-badge.pending::before {
+    background: var(--warning);
+    animation: pulse-dot 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.75); }
+  }
+
+  /* ── Date cell ── */
+  .date-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.35;
+  }
+
+  .empty-state p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .empty-state a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.2rem;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.18s;
+  }
+
+  .empty-state a:hover { background: #1d4ed8; }
+
+  /* ── Row reveal animation ── */
+  .apps-table tbody tr {
+    animation: row-in 0.3s ease both;
+  }
+  {% for app in applications %}
+  .apps-table tbody tr:nth-child({{ forloop.counter }}) {
+    animation-delay: {{ forloop.counter0 }}00ms;  {# not valid Django, see note #}
+  }
+  {% endfor %}
+
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="dash-wrapper">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="eyebrow">Overview</div>
+      <h1>My Dashboard</h1>
+    </div>
+    <div class="dash-header-right">
+      <a href="{% url 'user_job_list' %}" class="browse-btn">
+        ＋ Browse Jobs
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stat-card">
+      <div class="stat-icon total">📋</div>
+      <div>
+        <div class="stat-value">{{ applications|length }}</div>
+        <div class="stat-label">Total Applied</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon ok">✓</div>
+      <div>
+        <div class="stat-value">
+          {{ applications|dictsort:"status"|length }}
+          {# Replace with a custom tag or view-level count for accuracy #}
+        </div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon pend">◑</div>
+      <div>
+        <div class="stat-value">—</div>
+        <div class="stat-label">Pending Review</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table card -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <h2>Recent Applications</h2>
+      <span class="count-chip">{{ applications|length }} total</span>
+    </div>
+
+    <table class="apps-table">
+      <thead>
         <tr>
-          <th>Job</th>
+          <th>Job Position</th>
           <th>Status</th>
           <th>Applied At</th>
         </tr>
       </thead>
-
       <tbody>
         {% for app in applications %}
         <tr>
-          <td>{{ app.job.title }}</td>
           <td>
-            <span class="badge 
-              {% if app.status == 'approved' %}bg-success
-              {% elif app.status == 'rejected' %}bg-danger
-              {% else %}bg-warning text-dark{% endif %}
-            ">
+            <div class="job-cell">
+              <div class="job-avatar">
+                {{ app.job.title|slice:":2"|upper }}
+              </div>
+              <span class="job-title">{{ app.job.title }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="status-badge {{ app.status }}">
               {{ app.status|title }}
             </span>
           </td>
-          <td>{{ app.applied_at|date:"d M Y, h:i A" }}</td>
+          <td>
+            <span class="date-cell">{{ app.applied_at|date:"d M Y, h:i A" }}</span>
+          </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="3" class="text-center text-muted">
-            No applications yet.
+          <td colspan="3">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <p>You haven't applied to any jobs yet.</p>
+              <a href="{% url 'user_job_list' %}">Browse open positions →</a>
+            </div>
           </td>
         </tr>
         {% endfor %}

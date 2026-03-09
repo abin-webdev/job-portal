@@ -44,3 +44,24 @@ class Application(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.job.title}"
+
+
+
+class Interview(models.Model):
+
+    application = models.OneToOneField(
+        Application,
+        on_delete=models.CASCADE,
+        related_name="interview"
+    )
+
+    interview_date = models.DateField()
+    interview_time = models.TimeField()
+    mode = models.CharField(max_length=50)  # Online / Offline
+    meeting_link = models.URLField(blank=True, null=True)
+    location = models.CharField(max_length=200, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Interview - {self.application.user.username}"

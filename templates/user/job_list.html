@@ -1,61 +1,389 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3 class="mb-3">Available Jobs</h3>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<!-- 🔍 SEARCH BAR -->
-<form method="get" class="row mb-4">
-    <div class="col-md-10 col-sm-9 mb-2">
-        <input
-            type="text"
-            name="q"
-            value="{{ query }}"
-            class="form-control"
-            placeholder="Search by job title, company, location or category"
-        >
+  :root {
+    --bg:           #f0f2f5;
+    --surface:      #ffffff;
+    --border:       #e4e7ec;
+    --text-hi:      #0d1117;
+    --text-mid:     #4b5563;
+    --text-lo:      #9ca3af;
+    --ink:          #111827;
+    --blue:         #1a56db;
+    --blue-dark:    #1241b0;
+    --blue-soft:    #eff4ff;
+    --tag-bg:       #f3f4f6;
+    --tag-color:    #374151;
+    --shadow:       0 2px 8px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+    --shadow-hover: 0 12px 32px rgba(0,0,0,.10), 0 4px 10px rgba(0,0,0,.06);
+    --radius:       16px;
+  }
+
+  .jobs-page {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header .eyebrow {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: .4rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -.04em;
+    margin: 0 0 .3rem;
+    line-height: 1;
+  }
+
+  .page-header p {
+    color: var(--text-mid);
+    font-size: .875rem;
+    margin: 0;
+  }
+
+  /* ── Search bar ── */
+  .search-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 1rem 1rem 1rem 1.25rem;
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    margin-bottom: 1.75rem;
+    transition: box-shadow .2s;
+  }
+
+  .search-wrap:focus-within {
+    box-shadow: 0 0 0 3px rgba(26,86,219,.15), var(--shadow);
+    border-color: var(--blue);
+  }
+
+  .search-icon {
+    color: var(--text-lo);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: .925rem;
+    font-weight: 400;
+    color: var(--ink);
+    background: transparent;
+  }
+
+  .search-input::placeholder { color: var(--text-lo); }
+
+  .search-btn {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: .6rem 1.4rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: .825rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s, transform .15s;
+    white-space: nowrap;
+  }
+
+  .search-btn:hover {
+    background: var(--blue-dark);
+    transform: translateY(-1px);
+  }
+
+  /* ── Results bar ── */
+  .results-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .results-count {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--text-mid);
+  }
+
+  .results-count strong {
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    font-size: .85rem;
+  }
+
+  /* ── Job cards grid ── */
+  .jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .job-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: box-shadow .22s, transform .22s, border-color .22s;
+    animation: card-in .35s ease both;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .job-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(26,86,219,.04) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity .22s;
+    pointer-events:none;
+  }
+
+  .job-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+    border-color: rgba(26,86,219,.25);
+  }
+
+  .job-card:hover::after { opacity: 1; }
+
+  /* staggered entrance */
+  {% for job in jobs %}
+  .job-card:nth-child({{ forloop.counter }}) { animation-delay: {{ forloop.counter0 }}0ms; }
+  {% endfor %}
+
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+
+  /* ── Card internals ── */
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: .9rem;
+  }
+
+  .company-logo {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-weight: 800;
+    font-size: .9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: -.02em;
+  }
+
+  .card-titles { flex: 1; min-width: 0; }
+
+  .job-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -.02em;
+    margin: 0 0 .2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .company-name {
+    font-size: .8rem;
+    color: var(--text-mid);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Meta pills ── */
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    background: var(--tag-bg);
+    color: var(--tag-color);
+    font-size: .72rem;
+    font-weight: 500;
+    padding: .28rem .7rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .meta-pill .pill-icon { font-size: .75rem; opacity: .7; }
+
+  /* ── Card footer ── */
+  .card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: .75rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+
+  .category-tag {
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--blue);
+    background: var(--blue-soft);
+    padding: .25rem .65rem;
+    border-radius: 6px;
+  }
+
+  .view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    background: var(--ink);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .45rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background .18s, gap .18s;
+    position:relative;
+    z-index:2;
+  }
+
+  .view-btn:hover {
+    background: var(--blue);
+    color: #fff;
+    gap: .5rem;
+  }
+
+  .view-btn .arrow { font-size: .8rem; }
+
+  /* ── Empty state ── */
+  .empty-wrap {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 5rem 2rem;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+
+  .empty-wrap .empty-icon { font-size: 3rem; opacity: .3; margin-bottom: 1rem; }
+  .empty-wrap h3 { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: .4rem; }
+  .empty-wrap p  { font-size: .85rem; color: var(--text-lo); margin: 0; }
+</style>
+
+<div class="jobs-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="eyebrow">Opportunities</div>
+    <h1>Available Jobs</h1>
+    <p>Find your next role across all categories and locations.</p>
+  </div>
+
+  <!-- Search -->
+  <form method="get">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        class="search-input"
+        type="text"
+        name="q"
+        value="{{ query }}"
+        placeholder="Search by title, company, location or category…"
+        autocomplete="off"
+      >
+      <button type="submit" class="search-btn">Search</button>
     </div>
+  </form>
 
-    <div class="col-md-2 col-sm-3 mb-2">
-        <button type="submit" class="btn btn-primary w-100">
-            Search
-        </button>
-    </div>
-</form>
+  <!-- Results bar -->
+  <div class="results-bar">
+    <span class="results-count">
+      <strong>{{ jobs|length }}</strong> position{{ jobs|length|pluralize }} found
+      {% if query %} for "<em>{{ query }}</em>"{% endif %}
+    </span>
+  </div>
 
-<!-- 📋 JOBS TABLE -->
-<table class="table table-bordered bg-white shadow">
-    <thead class="table-light">
-        <tr>
-            <th>Title</th>
-            <th>Company</th>
-            <th>Location</th>
-            <th>Category</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-
-    <tbody>
+  <!-- Cards grid -->
+  <div class="jobs-grid">
     {% for job in jobs %}
-        <tr>
-            <td>{{ job.title }}</td>
-            <td>{{ job.company.company_name }}</td>
-            <td>{{ job.location }}</td>
-            <td>{{ job.category }}</td>
-            <td>
-                <a href="{% url 'user_job_detail' job.id %}"
-                   class="btn btn-primary btn-sm">
-                    View
-                </a>
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td colspan="5" class="text-center text-muted">
-                No jobs found.
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    <div class="job-card">
+      <div class="card-top">
+        <div class="company-logo">
+          {{ job.company.company_name|slice:":2"|upper }}
+        </div>
+        <div class="card-titles">
+          <div class="job-title">{{ job.title }}</div>
+          <div class="company-name">{{ job.company.company_name }}</div>
+        </div>
+      </div>
 
+      <div class="card-meta">
+        <span class="meta-pill">
+          <span class="pill-icon">📍</span>{{ job.location }}
+        </span>
+      </div>
+
+      <div class="card-footer-row">
+        <span class="category-tag">{{ job.category }}</span>
+        <a href="{% url 'user_job_detail' job_id=job.id %}" class="view-btn">
+          View <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    {% empty %}
+    <div class="empty-wrap">
+      <div class="empty-icon">🗂️</div>
+      <h3>No jobs found</h3>
+      <p>Try adjusting your search query or check back later.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
 {% endblock %}

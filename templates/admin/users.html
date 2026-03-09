@@ -1,41 +1,514 @@
 {% extends 'base.html' %}
 
-{% block sidebar %}
-  <a href="{% url 'admin_dashboard' %}">Dashboard</a>
-  <a href="{% url 'admin_users' %}" class="active">Users</a>
-  <a href="{% url 'admin_companies' %}">Companies</a>
-  <a href="{% url 'admin_job_list' %}">Jobs</a>
-  <a href="{% url 'admin_applications' %}">Applications</a>
-{% endblock %}
+{% block page_title %}Users — Admin{% endblock %}
 
 {% block content %}
-<h3>Users</h3>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<table class="table table-bordered bg-white shadow">
-    <tr>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Actions</th>
-    </tr>
+  :root {
+    --surface:      #ffffff;
+    --bg:           #f1f4f9;
+    --border:       #e5e9f0;
+    --text-hi:      #0d1117;
+    --text-mid:     #5a6478;
+    --text-lo:      #9ba5b7;
+    --accent:       #1a56db;
+    --accent-soft:  #eff4ff;
+    --accent-dark:  #1241b0;
+    --danger:       #dc2626;
+    --danger-bg:    #fef2f2;
+    --danger-bdr:   #fecaca;
+    --success:      #059669;
+    --success-bg:   #ecfdf5;
+    --warning:      #d97706;
+    --warning-bg:   #fffbeb;
+    --shadow-sm:    0 1px 4px rgba(0,0,0,.05);
+    --shadow-md:    0 4px 20px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
+    --radius:       14px;
+    --font:         'Outfit', sans-serif;
+    --mono:         'DM Mono', monospace;
+  }
+
+  .page { font-family: var(--font); max-width: 980px; margin: 0 auto; }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Page header ── */
+  .page-head {
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: up .3s ease both;
+  }
+
+  .head-eyebrow {
+    font-size: .63rem; font-weight: 700;
+    letter-spacing: .13em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .3rem;
+  }
+
+  .head-title {
+    font-size: 1.65rem; font-weight: 800;
+    color: var(--text-hi); letter-spacing: -.04em;
+    line-height: 1; margin: 0;
+  }
+
+  /* ── Search bar ── */
+  .search-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: .6rem .9rem;
+    display: flex; align-items: center; gap: .6rem;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .2s, box-shadow .2s;
+    min-width: 240px;
+  }
+
+  .search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+  }
+
+  .search-wrap i { color: var(--text-lo); font-size: .9rem; flex-shrink: 0; }
+
+  .search-input {
+    border: none; outline: none; background: transparent;
+    font-family: var(--font); font-size: .83rem;
+    color: var(--text-hi); width: 100%;
+  }
+
+  .search-input::placeholder { color: var(--text-lo); }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .9rem; margin-bottom: 1.5rem;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.3rem;
+    display: flex; align-items: center; gap: .85rem;
+    box-shadow: var(--shadow-sm);
+    animation: up .3s ease both;
+    transition: box-shadow .2s, transform .2s;
+  }
+
+  .stat-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .stat-box:nth-child(1) { animation-delay: .05s; }
+  .stat-box:nth-child(2) { animation-delay: .10s; }
+  .stat-box:nth-child(3) { animation-delay: .15s; }
+
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+
+  .stat-icon.total   { background: var(--accent-soft); color: var(--accent); }
+  .stat-icon.active  { background: var(--success-bg);  color: var(--success); }
+  .stat-icon.new     { background: var(--warning-bg);  color: var(--warning); }
+
+  .stat-val {
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--text-hi); font-family: var(--mono);
+    letter-spacing: -.04em; line-height: 1;
+  }
+
+  .stat-lbl {
+    font-size: .67rem; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: .06em;
+    font-weight: 500; margin-top: .12rem;
+  }
+
+  /* ── Users card ── */
+  .users-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: up .35s .2s ease both;
+    opacity: 0;
+  }
+
+  .card-head {
+    padding: 1rem 1.5rem;
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .card-head h2 {
+    font-size: .88rem; font-weight: 700;
+    color: var(--text-hi); margin: 0;
+    display: flex; align-items: center; gap: .45rem;
+  }
+
+  .card-head h2 i { color: var(--accent); }
+
+  .count-chip {
+    font-family: var(--mono); font-size: .7rem;
+    color: var(--text-mid); background: var(--bg);
+    border: 1px solid var(--border);
+    padding: .18rem .6rem; border-radius: 20px;
+  }
+
+  /* ── User row ── */
+  .user-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+    animation: up .3s ease both;
+  }
+
+  .user-row:last-child { border-bottom: none; }
+  .user-row:hover { background: #fafbfc; }
+
+  {% for u in users %}
+  .user-row:nth-child({{ forloop.counter }}) { animation-delay: {{ forloop.counter0 }}0ms; }
+  {% endfor %}
+
+  /* User info */
+  .user-info { display: flex; align-items: center; gap: .85rem; min-width: 0; }
+
+  .user-avatar {
+    width: 40px; height: 40px; border-radius: 11px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; font-size: .78rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: var(--mono);
+    border: 1px solid rgba(26,86,219,.13);
+    letter-spacing: -.02em;
+  }
+
+  .user-name {
+    font-size: .88rem; font-weight: 600;
+    color: var(--text-hi); letter-spacing: -.02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .user-id {
+    font-family: var(--mono); font-size: .68rem;
+    color: var(--text-lo); margin-top: .1rem;
+  }
+
+  /* Email */
+  .user-email {
+    font-family: var(--mono); font-size: .78rem;
+    color: var(--text-mid);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: flex; align-items: center; gap: .35rem;
+  }
+
+  .user-email i { color: var(--text-lo); font-size: .8rem; flex-shrink: 0; }
+
+  /* Delete button */
+  .delete-btn {
+    display: inline-flex; align-items: center; gap: .3rem;
+    background: var(--danger-bg); color: var(--danger);
+    border: 1.5px solid var(--danger-bdr);
+    border-radius: 8px; padding: .38rem .85rem;
+    font-family: var(--font); font-size: .74rem; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+    transition: background .18s, color .18s, transform .15s, box-shadow .18s;
+    cursor: pointer;
+  }
+
+  .delete-btn:hover {
+    background: var(--danger); color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220,38,38,.22);
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    padding: 4.5rem 2rem; text-align: center;
+  }
+
+  .empty-icon {
+    width: 64px; height: 64px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem; color: var(--text-lo);
+    margin: 0 auto 1.1rem;
+  }
+
+  .empty-state h3 {
+    font-size: .98rem; font-weight: 700;
+    color: var(--text-hi); margin-bottom: .35rem;
+    letter-spacing: -.02em;
+  }
+
+  .empty-state p { font-size: .8rem; color: var(--text-lo); margin: 0; }
+
+  /* ── Confirm modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    align-items: center; justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.18);
+    padding: 2rem;
+    max-width: 400px; width: 90%;
+    animation: modal-in .25s cubic-bezier(.4,0,.2,1);
+  }
+
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(.95) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-icon {
+    width: 52px; height: 52px;
+    background: var(--danger-bg); color: var(--danger);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; margin: 0 auto 1.1rem;
+  }
+
+  .modal-box h3 {
+    font-size: 1.05rem; font-weight: 800;
+    color: var(--text-hi); text-align: center;
+    letter-spacing: -.03em; margin-bottom: .45rem;
+  }
+
+  .modal-box p {
+    font-size: .8rem; color: var(--text-lo);
+    text-align: center; line-height: 1.55; margin-bottom: 1.5rem;
+  }
+
+  .modal-box p b { color: var(--text-hi); font-weight: 700; }
+
+  .modal-actions {
+    display: flex; gap: .65rem;
+  }
+
+  .modal-cancel {
+    flex: 1; padding: .65rem;
+    background: var(--bg); color: var(--text-mid);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--font); font-size: .83rem; font-weight: 600;
+    cursor: pointer; transition: background .15s;
+  }
+
+  .modal-cancel:hover { background: var(--border); }
+
+  .modal-confirm {
+    flex: 1; padding: .65rem;
+    background: var(--danger); color: #fff;
+    border: none; border-radius: 10px;
+    font-family: var(--font); font-size: .83rem; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(220,38,38,.3);
+    transition: background .15s, transform .15s;
+  }
+
+  .modal-confirm:hover { background: #b91c1c; transform: translateY(-1px); }
+
+  /* ═══════════════════════
+     RESPONSIVE
+  ═══════════════════════ */
+  @media (max-width: 768px) {
+    .stats-strip { grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+
+    .user-row {
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      gap: .4rem .75rem;
+      padding: .9rem 1.25rem;
+    }
+
+    .user-info  { grid-column: 1; grid-row: 1; }
+    .delete-btn { grid-column: 2; grid-row: 1; align-self: start; }
+    .user-email { grid-column: 1; grid-row: 2; }
+
+    .page-head  { flex-direction: column; align-items: flex-start; }
+    .search-wrap { width: 100%; min-width: unset; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-strip  { grid-template-columns: 1fr 1fr; }
+    .stat-box:last-child { grid-column: 1 / -1; }
+    .stat-val     { font-size: 1.25rem; }
+    .card-head    { padding: .85rem 1.1rem; }
+    .user-row     { padding: .85rem 1rem; }
+    .user-avatar  { width: 36px; height: 36px; font-size: .7rem; }
+    .modal-box    { padding: 1.5rem; }
+  }
+</style>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon"><i class="bi bi-person-x-fill"></i></div>
+    <h3>Delete User?</h3>
+    <p>You're about to permanently delete <b id="modalUsername">this user</b>. This action cannot be undone and will remove all their data.</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="modalCancel">Cancel</button>
+      <a class="modal-confirm" id="modalConfirm" href="#">Yes, Delete</a>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-head">
+    <div>
+      <div class="head-eyebrow">Admin Panel</div>
+      <h1 class="head-title">Users</h1>
+    </div>
+    <div class="search-wrap">
+      <i class="bi bi-search"></i>
+      <input class="search-input" type="text" id="searchInput" placeholder="Search by name or email…">
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-strip">
+    <div class="stat-box">
+      <div class="stat-icon total"><i class="bi bi-people"></i></div>
+      <div>
+        <div class="stat-val">{{ users|length }}</div>
+        <div class="stat-lbl">Total Users</div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon active"><i class="bi bi-person-check"></i></div>
+      <div>
+        <div class="stat-val">{{ users|length }}</div>
+        <div class="stat-lbl">Active</div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon new"><i class="bi bi-person-plus"></i></div>
+      <div>
+        <div class="stat-val">—</div>
+        <div class="stat-lbl">New This Week</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users card -->
+  <div class="users-card" id="usersCard">
+    <div class="card-head">
+      <h2><i class="bi bi-people"></i> All Users</h2>
+      <span class="count-chip" id="visibleCount">{{ users|length }} total</span>
+    </div>
 
     {% for u in users %}
-    <tr>
-        <td>{{ u.username }}</td>
-        <td>{{ u.email }}</td>
-        <td>
-            <a href="{% url 'admin_delete_user' u.id %}" 
-               class="btn btn-danger btn-sm"
-               onclick="return confirm('Are you sure you want to delete this user?');">
-                Delete
-            </a>
-        </td>
-    </tr>
+    <div class="user-row" data-name="{{ u.username|lower }}" data-email="{{ u.email|lower }}">
 
+      <div class="user-info">
+        <div class="user-avatar">{{ u.username|slice:":2"|upper }}</div>
+        <div>
+          <div class="user-name">{{ u.username }}</div>
+          <div class="user-id">#{{ u.id }}</div>
+        </div>
+      </div>
+
+      <div class="user-email">
+        <i class="bi bi-envelope"></i> {{ u.email|default:"No email" }}
+      </div>
+
+      <button
+        class="delete-btn"
+        data-url="{% url 'admin_delete_user' u.id %}"
+        data-name="{{ u.username }}"
+        onclick="openDeleteModal(this)"
+      >
+        <i class="bi bi-trash3"></i> Delete
+      </button>
+
+    </div>
     {% empty %}
-    <tr>
-        <td colspan="3">No users found.</td>
-    </tr>
+
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-people"></i></div>
+      <h3>No users found</h3>
+      <p>There are no registered users on the platform yet.</p>
+    </div>
+
     {% endfor %}
-</table>
+
+    <!-- No results row (shown by search filter) -->
+    <div class="empty-state" id="noResults" style="display:none;">
+      <div class="empty-icon"><i class="bi bi-search"></i></div>
+      <h3>No results</h3>
+      <p>No users match your search query.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ── Delete modal ── */
+  const modal       = document.getElementById('deleteModal');
+  const modalName   = document.getElementById('modalUsername');
+  const modalConfirm = document.getElementById('modalConfirm');
+  const modalCancel  = document.getElementById('modalCancel');
+
+  function openDeleteModal(btn) {
+    modalName.textContent    = btn.dataset.name;
+    modalConfirm.href        = btn.dataset.url;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  modalCancel.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  /* ── Live search filter ── */
+  const searchInput  = document.getElementById('searchInput');
+  const userRows     = document.querySelectorAll('.user-row');
+  const noResults    = document.getElementById('noResults');
+  const visibleCount = document.getElementById('visibleCount');
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase().trim();
+    let visible = 0;
+
+    userRows.forEach(row => {
+      const match = row.dataset.name.includes(q) || row.dataset.email.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+    visibleCount.textContent = `${visible} of {{ users|length }}`;
+  });
+</script>
 
 {% endblock %}

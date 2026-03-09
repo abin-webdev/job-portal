@@ -7,146 +7,557 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      background: #f4f6f9;
-      overflow-x: hidden;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sidebar-w:     240px;
+      --sidebar-bg:    #0b0f1a;
+      --sidebar-hover: rgba(255,255,255,.06);
+      --sidebar-active:#1d4ed8;
+      --accent:        #3b82f6;
+      --accent-soft:   rgba(59,130,246,.12);
+      --topbar-h:      60px;
+      --bg:            #f1f4f9;
+      --surface:       #ffffff;
+      --border:        #e5e9f0;
+      --text-hi:       #0d1117;
+      --text-mid:      #5a6478;
+      --text-lo:       #9ba5b7;
+      --danger:        #ef4444;
+      --success:       #22c55e;
+      --font:          'Outfit', sans-serif;
+      --mono:          'DM Mono', monospace;
     }
 
-    /* SIDEBAR */
-    .sidebar {
+    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text-hi); }
+
+    /* ═══════════════════════════════════════
+       LAYOUT SHELL
+    ═══════════════════════════════════════ */
+    .shell {
+      display: flex;
       min-height: 100vh;
-      background: #0f172a;
-      color: white;
-      padding: 20px;
     }
 
-    .sidebar a {
-      color: #e5e7eb;
-      display: block;
-      padding: 10px;
-      border-radius: 6px;
+    /* ═══════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* scrollbar */
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+
+    /* brand */
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: 1.4rem 1.25rem 1rem;
       text-decoration: none;
-      margin-bottom: 6px;
     }
 
-    .sidebar a:hover {
-      background: #1e293b;
-      color: white;
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(59,130,246,.4);
     }
 
-    /* TOPBAR */
+    .brand-name {
+      font-size: .95rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -.02em;
+      line-height: 1;
+    }
+
+    .brand-tagline {
+      font-size: .62rem;
+      color: rgba(255,255,255,.35);
+      font-weight: 400;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    /* nav section label */
+    .nav-label {
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.2);
+      padding: 1.25rem 1.25rem .4rem;
+    }
+
+    /* nav links */
+    .sidebar-nav { padding: 0 .75rem; flex: 1; }
+
+    .nav-link-item {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .65rem .9rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: rgba(255,255,255,.55);
+      font-size: .84rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+      transition: background .15s, color .15s, padding-left .15s;
+      position: relative;
+    }
+
+    .nav-link-item i {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-link-item:hover {
+      background: var(--sidebar-hover);
+      color: rgba(255,255,255,.9);
+      padding-left: 1.1rem;
+    }
+
+    .nav-link-item.active {
+      background: var(--accent-soft);
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    .nav-link-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      bottom: 20%;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* sidebar footer */
+    .sidebar-footer {
+      padding: 1rem .75rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .6rem .75rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      font-family: var(--mono);
+    }
+
+    .user-meta { min-width: 0; flex: 1; }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: rgba(255,255,255,.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: .64rem;
+      color: rgba(255,255,255,.3);
+      font-weight: 400;
+      text-transform: capitalize;
+    }
+
+    /* ═══════════════════════════════════════
+       MAIN COLUMN
+    ═══════════════════════════════════════ */
+    .main-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ═══════════════════════════════════════
+       TOPBAR
+    ═══════════════════════════════════════ */
     .topbar {
-      background: white;
-      padding: 12px 20px;
-      border-bottom: 1px solid #ddd;
+      height: var(--topbar-h);
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 90;
     }
 
-    .footer-link {
-      color: #9ca3af;
+    .topbar-left { display: flex; align-items: center; gap: .75rem; }
+
+    .hamburger {
+      display: none;
+      width: 36px;
+      height: 36px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--text-mid);
+      transition: background .15s;
+    }
+
+    .hamburger:hover { background: var(--border); }
+
+    .breadcrumb-trail {
+      font-size: .8rem;
+      color: var(--text-lo);
+      font-weight: 500;
+    }
+
+    .breadcrumb-trail span { color: var(--text-hi); font-weight: 600; }
+
+    .topbar-right { display: flex; align-items: center; gap: .6rem; }
+
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .82rem;
+      color: var(--text-mid);
+      font-weight: 500;
+    }
+
+    .topbar-user b { color: var(--text-hi); }
+
+    .logout-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: #fef2f2;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: .38rem .85rem;
+      font-family: var(--font);
+      font-size: .78rem;
+      font-weight: 600;
       text-decoration: none;
+      transition: background .15s, border-color .15s;
     }
 
-    .footer-link:hover {
-      color: white;
-      text-decoration: underline;
+    .logout-btn:hover {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
     }
 
-    /* MOBILE SIDEBAR */
+    /* ═══════════════════════════════════════
+       CONTENT AREA
+    ═══════════════════════════════════════ */
+    .content-area {
+      flex: 1;
+      padding: 2rem 2rem 1.5rem;
+      animation: content-fade .3s ease both;
+    }
+
+    @keyframes content-fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Alerts ── */
+    .alert {
+      border-radius: 10px;
+      font-size: .85rem;
+      padding: .75rem 1rem;
+      border: none;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      animation: content-fade .25s ease;
+    }
+
+    .sidebar-user{
+display:block;
+text-decoration:none;
+color:inherit;
+}
+
+.user-box{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px;
+border-radius:10px;
+transition:0.2s;
+}
+
+.user-box:hover{
+background:#111827;
+cursor:pointer;
+}
+
+    .alert-success { background: #f0fdf4; color: #166534; border-left: 3px solid var(--success); }
+    .alert-danger,
+    .alert-error   { background: #fef2f2; color: #991b1b; border-left: 3px solid var(--danger); }
+    .alert-warning { background: #fffbeb; color: #92400e; border-left: 3px solid #f59e0b; }
+    .alert-info    { background: #eff6ff; color: #1e40af; border-left: 3px solid var(--accent); }
+
+    /* ═══════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════ */
+    .site-footer {
+      background: var(--sidebar-bg);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .footer-copy {
+      font-size: .72rem;
+      color: rgba(255,255,255,.25);
+      font-family: var(--mono);
+    }
+
+    .footer-links { display: flex; gap: 1rem; }
+
+    .footer-links a {
+      font-size: .72rem;
+      color: rgba(255,255,255,.3);
+      text-decoration: none;
+      transition: color .15s;
+    }
+
+    .footer-links a:hover { color: rgba(255,255,255,.7); }
+
+    /* ═══════════════════════════════════════
+       MOBILE OVERLAY
+    ═══════════════════════════════════════ */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 99;
+      backdrop-filter: blur(2px);
+    }
+
     @media (max-width: 768px) {
       .sidebar {
         position: fixed;
-        top: 0;
-        left: -260px;
-        width: 240px;
+        top: 0; left: 0;
         height: 100vh;
-        z-index: 1050;
-        transition: left 0.3s ease;
+        transform: translateX(-100%);
+        z-index: 200;
       }
 
-      .sidebar.show {
-        left: 0;
-      }
+      .sidebar.open { transform: translateX(0); }
+
+      .hamburger { display: flex; }
+
+      .sidebar-overlay.open { display: block; }
+
+      .content-area { padding: 1.25rem; }
+
+      .topbar { padding: 0 1rem; }
+
+      .topbar-user .label { display: none; }
     }
   </style>
 </head>
 
 <body>
 
-<div class="container-fluid">
-  <div class="row">
+<!-- Mobile overlay -->
+<div class="sidebar-overlay" id="overlay"></div>
 
-    <!-- SIDEBAR -->
-    <div class="col-md-2 sidebar" id="sidebar">
-      <h4 class="text-center mb-4">Job Portal</h4>
+<div class="shell">
 
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Brand -->
+    <a class="sidebar-brand" href="#">
+      <div class="brand-icon"><i class="bi bi-briefcase-fill"></i></div>
+      <div>
+        <div class="brand-name">JobPortal</div>
+        <div class="brand-tagline">Find your next role</div>
+      </div>
+    </a>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
       {% if user.is_authenticated %}
+
         {% if user.profile.role == "admin" %}
-          <a href="{% url 'admin_dashboard' %}">Dashboard</a>
-          <a href="{% url 'admin_users' %}">Users</a>
-          <a href="{% url 'admin_companies' %}">Companies</a>
-          <a href="{% url 'admin_job_list' %}">Jobs</a>
-          <a href="{% url 'admin_applications' %}">Applications</a>
+          <div class="nav-label">Admin</div>
+          <a href="{% url 'admin_dashboard' %}"    class="nav-link-item {% if request.resolver_match.url_name == 'admin_dashboard'    %}active{% endif %}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+          <a href="{% url 'admin_users' %}"         class="nav-link-item {% if request.resolver_match.url_name == 'admin_users'         %}active{% endif %}"><i class="bi bi-people"></i> Users</a>
+          <a href="{% url 'admin_companies' %}"     class="nav-link-item {% if request.resolver_match.url_name == 'admin_companies'     %}active{% endif %}"><i class="bi bi-building"></i> Companies</a>
+          <a href="{% url 'admin_job_list' %}"      class="nav-link-item {% if request.resolver_match.url_name == 'admin_job_list'      %}active{% endif %}"><i class="bi bi-list-ul"></i> Jobs</a>
+          <a href="{% url 'admin_applications' %}"  class="nav-link-item {% if request.resolver_match.url_name == 'admin_applications'  %}active{% endif %}"><i class="bi bi-file-earmark-text"></i> Applications</a>
 
         {% elif user.profile.role == "company" %}
-          <a href="{% url 'company_dashboard' %}">Dashboard</a>
-          <a href="{% url 'company_post_job' %}">Post Job</a>
-          <a href="{% url 'company_jobs' %}">My Jobs</a>
+          <div class="nav-label">Company</div>
+          <a href="{% url 'company_dashboard' %}" class="nav-link-item {% if request.resolver_match.url_name == 'company_dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+          <a href="{% url 'company_post_job' %}"  class="nav-link-item {% if request.resolver_match.url_name == 'company_post_job'  %}active{% endif %}"><i class="bi bi-plus-circle"></i> Post Job</a>
+          <a href="{% url 'company_jobs' %}"      class="nav-link-item {% if request.resolver_match.url_name == 'company_jobs'      %}active{% endif %}"><i class="bi bi-briefcase"></i> My Jobs</a>
 
         {% elif user.profile.role == "user" %}
-          <a href="{% url 'user_dashboard' %}">Dashboard</a>
-          <a href="{% url 'user_job_list' %}">Browse Jobs</a>
-          <a href="{% url 'user_applications' %}">My Applications</a>
+          <div class="nav-label">Account</div>
+          <a href="{% url 'user_dashboard' %}"    class="nav-link-item {% if request.resolver_match.url_name == 'user_dashboard'    %}active{% endif %}"><i class="bi bi-house"></i> Dashboard</a>
+          <a href="{% url 'user_job_list' %}"     class="nav-link-item {% if request.resolver_match.url_name == 'user_job_list'     %}active{% endif %}"><i class="bi bi-search"></i> Browse Jobs</a>
+          <a href="{% url 'user_applications' %}" class="nav-link-item {% if request.resolver_match.url_name == 'user_applications' %}active{% endif %}"><i class="bi bi-file-earmark-check"></i> My Applications</a>
         {% endif %}
+
       {% endif %}
+    </nav>
+
+<!-- Sidebar footer / user info -->
+{% if user.is_authenticated %}
+<a href="{% url 'user_profile' %}" class="sidebar-user">
+    <div class="user-box">
+        <div class="user-avatar">
+            {{ request.user.username|slice:":2"|upper }}
+        </div>
+
+        <div class="user-info">
+            <div class="user-name">{{ request.user.username }}</div>
+            <div class="user-role">User</div>
+        </div>
     </div>
+</a>
+{% endif %}
 
-    <!-- MAIN -->
-    <div class="col-md-10 p-0 d-flex flex-column min-vh-100">
+  </aside>
 
-      <!-- TOPBAR -->
-      <div class="topbar d-flex justify-content-between align-items-center">
-        <!-- MOBILE TOGGLE -->
-        <button class="btn btn-outline-secondary d-md-none" id="sidebarToggle">
+  <!-- ── MAIN ── -->
+  <div class="main-col">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
           <i class="bi bi-list"></i>
         </button>
-
-        <span>Welcome, <b>{{ user.username }}</b></span>
-        <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Logout</a>
-      </div>
-
-      <!-- CONTENT -->
-      <div class="p-4 flex-grow-1">
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-          {% endfor %}
-        {% endif %}
-
-        {% block content %}{% endblock %}
-      </div>
-
-      <!-- FOOTER -->
-      <footer class="bg-dark text-light py-3">
-        <div class="container-fluid text-center small">
-          © {% now "Y" %} Job Portal • All rights reserved
-          &nbsp;|&nbsp;
-          <a href="#" class="footer-link">Privacy</a>
-          &nbsp;|&nbsp;
-          <a href="#" class="footer-link">Terms</a>
+        <div class="breadcrumb-trail">
+          {% block breadcrumb %}
+            <span>{% block page_title %}Overview{% endblock %}</span>
+          {% endblock %}
         </div>
-      </footer>
+      </div>
 
-    </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <span class="label">Welcome, </span><b>{{ user.username }}</b>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </div>
+    </header>
+
+    <!-- Alerts + Page content -->
+    <main class="content-area">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">
+            {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>
+            {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-exclamation-circle-fill"></i>
+            {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+            {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="footer-copy">© {% now "Y" %} JobPortal • All rights reserved</div>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Support</a>
+      </div>
+    </footer>
+
   </div>
 </div>
 
-<!-- SIDEBAR TOGGLE SCRIPT -->
 <script>
-  document.getElementById("sidebarToggle")?.addEventListener("click", function () {
-    document.getElementById("sidebar").classList.toggle("show");
-  });
+  const sidebar   = document.getElementById('sidebar');
+  const overlay   = document.getElementById('overlay');
+  const hamburger = document.getElementById('hamburger');
+
+  function openSidebar()  { sidebar.classList.add('open');  overlay.classList.add('open'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+
+  hamburger?.addEventListener('click', () =>
+    sidebar.classList.contains('open') ? closeSidebar() : openSidebar()
+  );
+
+  overlay?.addEventListener('click', closeSidebar);
+
+  // Close on nav link click (mobile)
+  document.querySelectorAll('.nav-link-item').forEach(link =>
+    link.addEventListener('click', () => { if (window.innerWidth < 769) closeSidebar(); })
+  );
 </script>
 
 </body>

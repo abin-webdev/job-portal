@@ -4,97 +4,663 @@
   <meta charset="UTF-8">
   <title>Register | Job Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #1cc88a, #4e73df);
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:        #1a56db;
+      --accent-dark:   #1241b0;
+      --accent-soft:   #eff4ff;
+      --surface:       #ffffff;
+      --bg:            #f1f4f9;
+      --border:        #e5e9f0;
+      --text-hi:       #0d1117;
+      --text-mid:      #5a6478;
+      --text-lo:       #9ba5b7;
+      --danger:        #dc2626;
+      --danger-bg:     #fef2f2;
+      --danger-border: #fecaca;
+      --success:       #059669;
+      --success-bg:    #ecfdf5;
+      --font:          'Outfit', sans-serif;
+      --mono:          'DM Mono', monospace;
+    }
+
+    html, body { font-family: var(--font); background: var(--bg); }
+
+    /* ═══════════════════════════════
+       SHELL
+    ═══════════════════════════════ */
+    .reg-shell {
       display: flex;
-      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════
+       LEFT PANEL
+    ═══════════════════════════════ */
+    .left-panel {
+      width: 420px;
+      flex-shrink: 0;
+      background: #0b0f1a;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(26,86,219,.38) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 80%, rgba(99,102,241,.22) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 110%, rgba(59,130,246,.15) 0%, transparent 50%);
+      animation: mesh .12s ease-in-out infinite alternate;
+    }
+
+    @keyframes mesh {
+      from { opacity: .85; transform: scale(1); }
+      to   { opacity: 1;   transform: scale(1.05) rotate(.8deg); }
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* Brand */
+    .left-brand {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; gap: .7rem;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: #fff; flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(26,86,219,.5);
+    }
+
+    .brand-name {
+      font-size: 1rem; font-weight: 800;
+      color: #fff; letter-spacing: -.03em;
+    }
+
+    .brand-tag {
+      font-size: .6rem; color: rgba(255,255,255,.3);
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+
+    /* Hero */
+    .left-hero { position: relative; z-index: 2; }
+
+    .left-hero h1 {
+      font-size: 2.1rem; font-weight: 800;
+      color: #fff; letter-spacing: -.05em;
+      line-height: 1.1; margin-bottom: .85rem;
+    }
+
+    .left-hero h1 span {
+      background: linear-gradient(90deg, #60a5fa, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .left-hero p {
+      font-size: .85rem; color: rgba(255,255,255,.4);
+      line-height: 1.7;
+    }
+
+    /* Steps */
+    .steps { position: relative; z-index: 2; }
+
+    .steps-title {
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(255,255,255,.2); margin-bottom: 1rem;
+    }
+
+    .step-item {
+      display: flex; align-items: flex-start; gap: .75rem;
+      margin-bottom: .9rem;
+      animation: step-in .5s ease both;
+    }
+
+    .step-item:nth-child(2) { animation-delay: .1s; }
+    .step-item:nth-child(3) { animation-delay: .2s; }
+    .step-item:nth-child(4) { animation-delay: .3s; }
+
+    @keyframes step-in {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .step-num {
+      width: 24px; height: 24px; flex-shrink: 0;
+      border-radius: 7px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 700; color: #fff;
+      font-family: var(--mono);
+      box-shadow: 0 2px 8px rgba(26,86,219,.4);
+    }
+
+    .step-text { }
+    .step-title { font-size: .8rem; font-weight: 600; color: rgba(255,255,255,.75); }
+    .step-sub   { font-size: .7rem; color: rgba(255,255,255,.3); margin-top: .1rem; }
+
+    /* ═══════════════════════════════
+       RIGHT PANEL
+    ═══════════════════════════════ */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
       justify-content: center;
+      padding: 3rem 2rem;
+      overflow-y: auto;
     }
-    .register-card {
-      border-radius: 16px;
-      border: none;
+
+    .form-wrap {
+      width: 100%;
+      max-width: 480px;
+      animation: form-in .4s ease both;
     }
-    .register-card h3 {
-      font-weight: 700;
+
+    @keyframes form-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .btn-success {
-      background-color: #1cc88a;
-      border: none;
+
+    /* Header */
+    .form-header { margin-bottom: 1.75rem; }
+
+    .form-header .eyebrow {
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .13em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: .35rem;
     }
-    .btn-success:hover {
-      background-color: #17a673;
+
+    .form-header h2 {
+      font-size: 1.7rem; font-weight: 800;
+      color: var(--text-hi); letter-spacing: -.04em;
+      line-height: 1; margin-bottom: .35rem;
     }
-    label {
-      font-weight: 500;
+
+    .form-header p {
+      font-size: .78rem; color: var(--text-lo); line-height: 1.5;
+    }
+
+    /* Error alert */
+    .form-errors {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-left: 3px solid var(--danger);
+      border-radius: 10px;
+      padding: .8rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: .78rem; color: var(--danger);
+      animation: form-in .25s ease;
+    }
+
+    .form-errors strong {
+      display: flex; align-items: center; gap: .35rem;
+      font-size: .8rem; margin-bottom: .4rem;
+    }
+
+    .form-errors ul { margin: 0; padding-left: 1.1rem; }
+    .form-errors li { margin-bottom: .2rem; line-height: 1.4; }
+
+    /* Field grid */
+    .fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 1.1rem;
+    }
+
+    .field      { display: flex; flex-direction: column; }
+    .field.full { grid-column: 1 / -1; }
+
+    .field-label {
+      font-size: .73rem; font-weight: 700;
+      color: var(--text-hi); letter-spacing: .02em;
+      margin-bottom: .4rem;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-icon {
+      position: absolute;
+      left: .85rem; top: 50%; transform: translateY(-50%);
+      color: var(--text-lo); font-size: .9rem;
+      pointer-events: none;
+      transition: color .18s;
+    }
+
+    .field-input,
+    .field-select {
+      width: 100%;
+      background: #f8f9fb;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: .68rem .85rem .68rem 2.4rem;
+      font-family: var(--font);
+      font-size: .855rem;
+      color: var(--text-hi);
+      outline: none;
+      transition: border-color .18s, background .18s, box-shadow .18s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .field-input::placeholder { color: var(--text-lo); }
+
+    .field-input:focus,
+    .field-select:focus {
+      background: var(--surface);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+    }
+
+    .input-wrap:focus-within .input-icon { color: var(--accent); }
+
+    /* Password toggle */
+    .pw-toggle {
+      position: absolute;
+      right: .8rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; padding: 0;
+      color: var(--text-lo); cursor: pointer;
+      font-size: .9rem; transition: color .15s;
+    }
+    .pw-toggle:hover { color: var(--text-mid); }
+
+    /* Select arrow */
+    .select-arrow {
+      position: absolute;
+      right: .85rem; top: 50%; transform: translateY(-50%);
+      color: var(--text-lo); font-size: .8rem;
+      pointer-events: none;
+    }
+
+    /* Role cards */
+    .role-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .6rem;
+      margin-top: .1rem;
+    }
+
+    .role-card {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .role-card input[type="radio"] {
+      position: absolute; opacity: 0; pointer-events: none;
+    }
+
+    .role-card-inner {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: .9rem .75rem;
+      text-align: center;
+      background: #f8f9fb;
+      transition: border-color .18s, background .18s, box-shadow .18s;
+      cursor: pointer;
+    }
+
+    .role-card input:checked + .role-card-inner {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 3px rgba(26,86,219,.08);
+    }
+
+    .role-icon {
+      font-size: 1.4rem;
+      margin-bottom: .35rem;
+      display: block;
+      transition: transform .2s;
+    }
+
+    .role-card:hover .role-icon { transform: scale(1.15); }
+
+    .role-label {
+      font-size: .73rem; font-weight: 600;
+      color: var(--text-mid);
+      transition: color .18s;
+    }
+
+    .role-card input:checked + .role-card-inner .role-label {
+      color: var(--accent);
+    }
+
+    .role-desc {
+      font-size: .62rem; color: var(--text-lo);
+      margin-top: .15rem; line-height: 1.3;
+    }
+
+    /* Password strength */
+    .pw-strength { margin-top: .4rem; }
+
+    .strength-bar {
+      height: 3px; border-radius: 2px;
+      background: var(--border);
+      overflow: hidden; margin-bottom: .25rem;
+    }
+
+    .strength-fill {
+      height: 100%; border-radius: 2px;
+      width: 0%; transition: width .3s, background .3s;
+    }
+
+    .strength-label {
+      font-size: .67rem; color: var(--text-lo);
+      font-family: var(--mono);
+    }
+
+    /* Divider */
+    .form-divider {
+      height: 1px; background: var(--border);
+      margin: 1.4rem 0;
+    }
+
+    /* Terms */
+    .terms-row {
+      display: flex; align-items: flex-start; gap: .5rem;
+      font-size: .74rem; color: var(--text-mid);
+      margin-bottom: 1.4rem;
+    }
+
+    .terms-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 14px; height: 14px;
+      flex-shrink: 0; margin-top: .15rem;
+      cursor: pointer;
+    }
+
+    .terms-row a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .terms-row a:hover { color: var(--accent-dark); }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 10px;
+      padding: .8rem;
+      font-family: var(--font); font-size: .9rem; font-weight: 700;
+      cursor: pointer; letter-spacing: -.01em;
+      box-shadow: 0 4px 16px rgba(26,86,219,.3);
+      display: flex; align-items: center;
+      justify-content: center; gap: .45rem;
+      transition: background .18s, transform .15s, box-shadow .18s;
+    }
+
+    .submit-btn:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(26,86,219,.35);
+    }
+    .submit-btn:active { transform: translateY(0); }
+
+    /* Login link */
+    .login-row {
+      text-align: center;
+      font-size: .78rem; color: var(--text-lo);
+      margin-top: 1.25rem;
+    }
+    .login-row a {
+      color: var(--accent); font-weight: 700;
+      text-decoration: none; transition: color .15s;
+    }
+    .login-row a:hover { color: var(--accent-dark); }
+
+    /* ═══════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════ */
+    @media (max-width: 1024px) {
+      .left-panel { width: 340px; padding: 2rem; }
+      .left-hero h1 { font-size: 1.7rem; }
+    }
+
+    @media (max-width: 768px) {
+      .reg-shell { flex-direction: column; }
+
+      .left-panel {
+        position: static; height: auto;
+        width: 100%; padding: 1.5rem;
+      }
+
+      .left-hero h1 { font-size: 1.4rem; }
+      .left-hero p  { display: none; }
+      .steps        { display: none; }
+
+      .right-panel  { padding: 1.75rem 1.25rem; }
+      .fields-grid  { grid-template-columns: 1fr; }
+      .field.full   { grid-column: 1; }
+      .role-cards   { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .left-panel   { padding: 1.1rem 1.1rem 1.4rem; }
+      .left-hero h1 { font-size: 1.2rem; }
+      .right-panel  { padding: 1.25rem .95rem; }
+      .form-header h2 { font-size: 1.4rem; }
+      .role-cards   { grid-template-columns: 1fr; }
+      .role-card-inner { display: flex; align-items: center; gap: .75rem; text-align: left; padding: .75rem .9rem; }
+      .role-icon    { margin: 0; font-size: 1.2rem; }
     }
   </style>
 </head>
 
 <body>
+<div class="reg-shell">
 
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-5 col-sm-11">
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left-panel">
+    <a class="left-brand" href="#">
+      <div class="brand-icon"><i class="bi bi-briefcase-fill"></i></div>
+      <div>
+        <div class="brand-name">JobPortal</div>
+        <div class="brand-tag">Find your next role</div>
+      </div>
+    </a>
 
-      <div class="card register-card shadow-lg">
-        <div class="card-body p-4">
+    <div class="left-hero">
+      <h1>Join thousands<br>of <span>job seekers.</span></h1>
+      <p>Create your free account and get access to thousands of job listings across every industry and location.</p>
+    </div>
 
-          <h3 class="text-center mb-4">Create Account</h3>
+    <div class="steps">
+      <div class="steps-title">How it works</div>
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <div class="step-title">Create your account</div>
+          <div class="step-sub">Takes less than 2 minutes</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <div class="step-title">Browse open positions</div>
+          <div class="step-sub">Filter by role, location & category</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <div class="step-title">Apply with one click</div>
+          <div class="step-sub">Upload resume & cover letter</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <div class="step-title">Track your applications</div>
+          <div class="step-sub">Real-time status updates</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-          {% if form.errors %}
-            <div class="alert alert-danger small">
-              {{ form.errors }}
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="right-panel">
+    <div class="form-wrap">
+
+      <div class="form-header">
+        <div class="eyebrow">Get started</div>
+        <h2>Create your<br>free account</h2>
+        <p>Already have an account? <a href="{% url 'login' %}" style="color:var(--accent);font-weight:600;text-decoration:none;">Sign in here</a></p>
+      </div>
+
+      {% if form.errors %}
+      <div class="form-errors">
+        <strong><i class="bi bi-exclamation-circle-fill"></i> Please fix the following:</strong>
+        <ul>
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><b>{{ field.label }}:</b> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <form method="post" id="regForm">
+        {% csrf_token %}
+
+        <div class="fields-grid">
+
+          <!-- Username -->
+          <div class="field">
+            <label class="field-label" for="id_username">Username</label>
+            <div class="input-wrap">
+              <input type="text" name="username" id="id_username"
+                class="field-input" placeholder="johndoe"
+                autocomplete="username" required
+                value="{{ form.username.value|default:'' }}">
+              <i class="bi bi-person input-icon"></i>
             </div>
-          {% endif %}
+          </div>
 
-          <form method="post">
-            {% csrf_token %}
-
-            <div class="mb-3">
-              <label class="form-label">Username</label>
-              {{ form.username }}
+          <!-- Email -->
+          <div class="field">
+            <label class="field-label" for="id_email">Email</label>
+            <div class="input-wrap">
+              <input type="email" name="email" id="id_email"
+                class="field-input" placeholder="john@example.com"
+                autocomplete="email"
+                value="{{ form.email.value|default:'' }}">
+              <i class="bi bi-envelope input-icon"></i>
             </div>
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label">Email</label>
-              {{ form.email }}
+          <!-- Password -->
+          <div class="field">
+            <label class="field-label" for="id_password">Password</label>
+            <div class="input-wrap">
+              <input type="password" name="password" id="id_password"
+                class="field-input" placeholder="Min. 8 characters"
+                autocomplete="new-password" required>
+              <i class="bi bi-lock input-icon"></i>
+              <button type="button" class="pw-toggle" data-target="id_password">
+                <i class="bi bi-eye"></i>
+              </button>
             </div>
-
-            <div class="mb-3">
-              <label class="form-label">Password</label>
-              {{ form.password }}
+            <div class="pw-strength">
+              <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+              <div class="strength-label" id="strengthLabel">Enter a password</div>
             </div>
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label">Confirm Password</label>
-              {{ form.confirm_password }}
+          <!-- Confirm Password -->
+          <div class="field">
+            <label class="field-label" for="id_confirm_password">Confirm Password</label>
+            <div class="input-wrap">
+              <input type="password" name="confirm_password" id="id_confirm_password"
+                class="field-input" placeholder="Repeat password"
+                autocomplete="new-password" required>
+              <i class="bi bi-lock-fill input-icon"></i>
+              <button type="button" class="pw-toggle" data-target="id_confirm_password">
+                <i class="bi bi-eye"></i>
+              </button>
             </div>
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label">Role</label>
-              {{ form.role }}
+          <!-- Role -->
+          <div class="field full">
+            <label class="field-label">I am a…</label>
+            <div class="role-cards">
+
+              <label class="role-card">
+                <input type="radio" name="role" value="user"
+                  {% if form.role.value == 'user' or not form.role.value %}checked{% endif %}>
+                <div class="role-card-inner">
+                  <span class="role-icon">🧑‍💼</span>
+                  <div class="role-label">Job Seeker</div>
+                  <div class="role-desc">Looking for work</div>
+                </div>
+              </label>
+
+              <label class="role-card">
+                <input type="radio" name="role" value="company"
+                  {% if form.role.value == 'company' %}checked{% endif %}>
+                <div class="role-card-inner">
+                  <span class="role-icon">🏢</span>
+                  <div class="role-label">Company</div>
+                  <div class="role-desc">Hiring talent</div>
+                </div>
+              </label>
+
+              <label class="role-card">
+                <input type="radio" name="role" value="admin"
+                  {% if form.role.value == 'admin' %}checked{% endif %}>
+                <div class="role-card-inner">
+                  <span class="role-icon">⚙️</span>
+                  <div class="role-label">Admin</div>
+                  <div class="role-desc">Manage platform</div>
+                </div>
+              </label>
+
             </div>
-
-            <button type="submit" class="btn btn-success w-100 py-2">
-              Register
-            </button>
-          </form>
-
-          <div class="text-center mt-3">
-            <small>
-              Already have an account?
-              <a href="{% url 'login' %}" class="fw-semibold text-decoration-none">
-                Login here
-              </a>
-            </small>
           </div>
 
         </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Terms -->
+        <label class="terms-row">
+          <input type="checkbox" required>
+          I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </label>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" id="regBtn">
+          <i class="bi bi-person-plus-fill"></i> Create Account
+        </button>
+      </form>
+
+      <div class="login-row">
+        Already registered? <a href="{% url 'login' %}">Sign in →</a>
       </div>
 
     </div>
@@ -102,10 +668,78 @@
 </div>
 
 <script>
-  document.querySelectorAll("input, select").forEach(el => {
-    el.classList.add("form-control");
+  /* ── Password toggles ── */
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const icon  = btn.querySelector('i');
+      const show  = input.type === 'password';
+      input.type    = show ? 'text' : 'password';
+      icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+  });
+
+  /* ── Password strength ── */
+  const pwInput      = document.getElementById('id_password');
+  const strengthFill = document.getElementById('strengthFill');
+  const strengthLabel = document.getElementById('strengthLabel');
+
+  const levels = [
+    { label: 'Too short',  color: '#ef4444', w: '15%' },
+    { label: 'Weak',       color: '#f97316', w: '35%' },
+    { label: 'Fair',       color: '#eab308', w: '60%' },
+    { label: 'Good',       color: '#3b82f6', w: '80%' },
+    { label: 'Strong 💪',  color: '#059669', w: '100%' },
+  ];
+
+  function getStrength(pw) {
+    if (pw.length < 4)  return 0;
+    if (pw.length < 6)  return 1;
+    let score = 1;
+    if (pw.length >= 8)          score++;
+    if (/[A-Z]/.test(pw))        score++;
+    if (/[0-9]/.test(pw))        score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return Math.min(score, 4);
+  }
+
+  pwInput.addEventListener('input', () => {
+    const val = pwInput.value;
+    if (!val) {
+      strengthFill.style.width      = '0%';
+      strengthLabel.textContent     = 'Enter a password';
+      strengthLabel.style.color     = 'var(--text-lo)';
+      return;
+    }
+    const lvl = getStrength(val);
+    const { label, color, w } = levels[lvl];
+    strengthFill.style.width      = w;
+    strengthFill.style.background = color;
+    strengthLabel.textContent     = label;
+    strengthLabel.style.color     = color;
+  });
+
+  /* ── Confirm password match ── */
+  const confirmInput = document.getElementById('id_confirm_password');
+  confirmInput.addEventListener('input', () => {
+    const match = confirmInput.value === pwInput.value;
+    confirmInput.style.borderColor = confirmInput.value
+      ? (match ? 'var(--success)' : 'var(--danger)')
+      : 'var(--border)';
+    confirmInput.style.boxShadow = confirmInput.value
+      ? (match
+          ? '0 0 0 3px rgba(5,150,105,.1)'
+          : '0 0 0 3px rgba(220,38,38,.1)')
+      : 'none';
+  });
+
+  /* ── Submit loading ── */
+  document.getElementById('regForm').addEventListener('submit', () => {
+    const btn = document.getElementById('regBtn');
+    btn.innerHTML  = '<i class="bi bi-hourglass-split"></i> Creating account…';
+    btn.disabled   = true;
+    btn.style.opacity = '.75';
   });
 </script>
-
 </body>
 </html>

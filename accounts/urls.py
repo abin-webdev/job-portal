@@ -46,6 +46,7 @@ urlpatterns = [
     # Users
     path('admin/users/', views.admin_users, name='admin_users'),
     path('admin/users/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
 
     # Companies
     path('admin/companies/', views.admin_companies, name='admin_companies'),

@@ -1,27 +1,412 @@
 {% extends 'base.html' %}
+
+{% block page_title %}My Jobs{% endblock %}
+
 {% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-<h3>My Jobs</h3>
+  :root {
+    --surface:      #ffffff;
+    --bg:           #f1f4f9;
+    --border:       #e5e9f0;
+    --text-hi:      #0d1117;
+    --text-mid:     #5a6478;
+    --text-lo:      #9ba5b7;
+    --accent:       #1a56db;
+    --accent-soft:  #eff4ff;
+    --accent-dark:  #1241b0;
+    --success:      #059669;
+    --success-bg:   #ecfdf5;
+    --warning:      #d97706;
+    --warning-bg:   #fffbeb;
+    --danger:       #dc2626;
+    --danger-bg:    #fef2f2;
+    --shadow-sm:    0 1px 4px rgba(0,0,0,.05);
+    --shadow-md:    0 4px 20px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
+    --radius:       14px;
+    --font:         'Outfit', sans-serif;
+    --mono:         'DM Mono', monospace;
+  }
 
-<table class="table bg-white shadow">
-    <tr>
-        <th>Job Title</th>
-        <th>Location</th>
-        <th>Applicants</th>
-    </tr>
+  .page { font-family: var(--font); max-width: 1000px; margin: 0 auto; }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Page header ── */
+  .page-head {
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: up .3s ease both;
+  }
+
+  .head-eyebrow {
+    font-size: .63rem; font-weight: 700;
+    letter-spacing: .13em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .3rem;
+  }
+
+  .head-title {
+    font-size: 1.65rem; font-weight: 800;
+    color: var(--text-hi); letter-spacing: -.04em;
+    line-height: 1; margin: 0;
+  }
+
+  .post-btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: var(--accent); color: #fff;
+    border-radius: 10px; padding: .58rem 1.25rem;
+    font-family: var(--font); font-size: .82rem; font-weight: 700;
+    text-decoration: none; white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(26,86,219,.28);
+    transition: background .18s, transform .15s, box-shadow .18s;
+  }
+  .post-btn:hover {
+    background: var(--accent-dark); color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(26,86,219,.32);
+  }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.3rem;
+    display: flex; align-items: center; gap: .85rem;
+    box-shadow: var(--shadow-sm);
+    animation: up .3s ease both;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .stat-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .stat-box:nth-child(1) { animation-delay: .05s; }
+  .stat-box:nth-child(2) { animation-delay: .10s; }
+  .stat-box:nth-child(3) { animation-delay: .15s; }
+
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .stat-icon.jobs  { background: var(--accent-soft); color: var(--accent); }
+  .stat-icon.apps  { background: var(--success-bg);  color: var(--success); }
+  .stat-icon.pend  { background: var(--warning-bg);  color: var(--warning); }
+
+  .stat-val {
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--text-hi); font-family: var(--mono);
+    letter-spacing: -.04em; line-height: 1;
+  }
+  .stat-lbl {
+    font-size: .67rem; color: var(--text-lo);
+    text-transform: uppercase; letter-spacing: .06em;
+    font-weight: 500; margin-top: .12rem;
+  }
+
+  /* ── Jobs card ── */
+  .jobs-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: up .35s .2s ease both;
+    opacity: 0;
+  }
+
+  .card-head {
+    padding: 1rem 1.5rem;
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .card-head h2 {
+    font-size: .88rem; font-weight: 700;
+    color: var(--text-hi); margin: 0;
+    display: flex; align-items: center; gap: .45rem;
+  }
+
+  .card-head h2 i { color: var(--accent); }
+
+  .count-chip {
+    font-family: var(--mono); font-size: .7rem;
+    color: var(--text-mid); background: var(--bg);
+    border: 1px solid var(--border);
+    padding: .18rem .6rem; border-radius: 20px;
+  }
+
+  /* ── Job row ── */
+  .job-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.15rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+    animation: up .3s ease both;
+    text-decoration: none;
+  }
+
+  .job-row:last-child { border-bottom: none; }
+  .job-row:hover { background: #fafbfc; }
+
+  {% for job in jobs %}
+  .job-row:nth-child({{ forloop.counter }}) { animation-delay: {{ forloop.counter0 }}0ms; }
+  {% endfor %}
+
+  /* Job info */
+  .job-info { display: flex; align-items: center; gap: .9rem; min-width: 0; }
+
+  .job-avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 800; font-size: .82rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: var(--mono);
+    border: 1px solid rgba(26,86,219,.13);
+  }
+
+  .job-title {
+    font-size: .92rem; font-weight: 700;
+    color: var(--text-hi); letter-spacing: -.02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: .15rem;
+  }
+
+  .job-location {
+    font-size: .72rem; color: var(--text-lo);
+    display: flex; align-items: center; gap: .3rem;
+  }
+
+  .job-location i { font-size: .75rem; }
+
+  /* Applicant pill */
+  .app-pill {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: .3rem .85rem;
+    font-size: .74rem; font-weight: 600;
+    color: var(--text-mid); white-space: nowrap;
+    font-family: var(--mono);
+  }
+
+  .app-pill i { font-size: .8rem; color: var(--text-lo); }
+
+  .app-pill.has-apps {
+    background: var(--success-bg);
+    border-color: #a7f3d0;
+    color: var(--success);
+  }
+
+  .app-pill.has-apps i { color: var(--success); }
+
+  /* Status badge */
+  .active-badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .68rem; font-weight: 600;
+    color: var(--success); background: var(--success-bg);
+    border: 1px solid #a7f3d0;
+    padding: .22rem .6rem; border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .active-badge::before {
+    content: '';
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--success);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: .4; transform: scale(.7); }
+  }
+
+  /* View btn */
+  .view-btn {
+    display: inline-flex; align-items: center; gap: .3rem;
+    background: var(--accent-soft); color: var(--accent);
+    border: 1px solid rgba(26,86,219,.18);
+    border-radius: 8px; padding: .42rem .95rem;
+    font-family: var(--font); font-size: .76rem; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+    transition: background .18s, color .18s, transform .15s;
+  }
+
+  .view-btn:hover {
+    background: var(--accent); color: #fff;
+    transform: translateY(-1px);
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    padding: 5rem 2rem; text-align: center;
+  }
+
+  .empty-icon {
+    width: 68px; height: 68px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.9rem; color: var(--text-lo);
+    margin: 0 auto 1.1rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1rem; font-weight: 700;
+    color: var(--text-hi); margin-bottom: .35rem;
+    letter-spacing: -.02em;
+  }
+
+  .empty-state p {
+    font-size: .81rem; color: var(--text-lo);
+    margin-bottom: 1.4rem;
+  }
+
+  .empty-cta {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: var(--accent); color: #fff;
+    border-radius: 9px; padding: .6rem 1.3rem;
+    font-family: var(--font); font-size: .82rem; font-weight: 600;
+    text-decoration: none;
+    transition: background .18s, transform .15s;
+  }
+  .empty-cta:hover { background: var(--accent-dark); transform: translateY(-1px); color: #fff; }
+
+  /* ═══════════════════════
+     RESPONSIVE
+  ═══════════════════════ */
+  @media (max-width: 768px) {
+    .stats-strip { grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+
+    .job-row {
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      gap: .5rem .75rem;
+      padding: 1rem 1.25rem;
+    }
+
+    .job-info   { grid-column: 1; grid-row: 1; }
+    .view-btn   { grid-column: 2; grid-row: 1; align-self: start; margin-top: .15rem; }
+    .app-pill   { grid-column: 1; grid-row: 2; width: fit-content; }
+    .active-badge { display: none; }
+  }
+
+  @media (max-width: 540px) {
+    .stats-strip  { grid-template-columns: 1fr 1fr; }
+    .stat-box:last-child { grid-column: 1 / -1; }
+    .page-head    { flex-direction: column; align-items: flex-start; }
+    .post-btn     { width: 100%; justify-content: center; }
+    .card-head    { padding: .85rem 1.1rem; }
+    .job-row      { padding: .9rem 1.1rem; }
+    .job-avatar   { width: 38px; height: 38px; font-size: .74rem; }
+    .job-title    { font-size: .84rem; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-head">
+    <div>
+      <div class="head-eyebrow">Manage</div>
+      <h1 class="head-title">My Jobs</h1>
+    </div>
+    <a href="{% url 'company_post_job' %}" class="post-btn">
+      <i class="bi bi-plus-lg"></i> Post a Job
+    </a>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stat-box">
+      <div class="stat-icon jobs"><i class="bi bi-briefcase"></i></div>
+      <div>
+        <div class="stat-val">{{ jobs|length }}</div>
+        <div class="stat-lbl">Total Jobs</div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon apps"><i class="bi bi-people"></i></div>
+      <div>
+        <div class="stat-val">
+          {% with total=0 %}
+            {% for job in jobs %}
+              {% with total=total|add:job.applications.count %}{% endwith %}
+            {% endfor %}
+          {% endwith %}—
+        </div>
+        <div class="stat-lbl">Total Applicants</div>
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon pend"><i class="bi bi-activity"></i></div>
+      <div>
+        <div class="stat-val">{{ jobs|length }}</div>
+        <div class="stat-lbl">Active Listings</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jobs list card -->
+  <div class="jobs-card">
+    <div class="card-head">
+      <h2><i class="bi bi-list-ul"></i> All Listings</h2>
+      <span class="count-chip">{{ jobs|length }} job{{ jobs|length|pluralize }}</span>
+    </div>
 
     {% for job in jobs %}
-    <tr>
-        <td>{{ job.title }}</td>
-        <td>{{ job.location }}</td>
-        <td>{{ job.applications.count }}</td>
-        <td><a href="{% url 'company_applications' job.id %}" class="btn btn-sm btn-secondary">
-        View Applicants
-    </a>
-</td>
+    <div class="job-row">
 
-    </tr>
+      <div class="job-info">
+        <div class="job-avatar">{{ job.title|slice:":2"|upper }}</div>
+        <div>
+          <div class="job-title">{{ job.title }}</div>
+          <div class="job-location">
+            <i class="bi bi-geo-alt"></i> {{ job.location }}
+          </div>
+        </div>
+      </div>
+
+      <span class="active-badge">Live</span>
+
+      <span class="app-pill {% if job.applications.count > 0 %}has-apps{% endif %}">
+        <i class="bi bi-people"></i>
+        {{ job.applications.count }} applicant{{ job.applications.count|pluralize }}
+      </span>
+
+      <a href="{% url 'company_applications' job.id %}" class="view-btn">
+        <i class="bi bi-eye"></i> View
+      </a>
+
+    </div>
+    {% empty %}
+
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-briefcase"></i></div>
+      <h3>No jobs posted yet</h3>
+      <p>Create your first listing to start receiving applications.</p>
+      <a href="{% url 'company_post_job' %}" class="empty-cta">
+        <i class="bi bi-plus-lg"></i> Post Your First Job
+      </a>
+    </div>
+
     {% endfor %}
-</table>
+  </div>
 
+</div>
 {% endblock %}

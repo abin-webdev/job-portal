@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block page_title %}Schedule Interview{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:           #f0f2f5;
+    --surface:      #ffffff;
+    --border:       #e4e8f0;
+    --border-hi:    #cdd4e0;
+    --border-focus: #1a56db;
+    --text-hi:      #0d1117;
+    --text-mid:     #4a5568;
+    --text-lo:      #a0aec0;
+    --accent:       #1a56db;
+    --accent-soft:  #eff4ff;
+    --accent-dark:  #1241b0;
+    --success:      #059669;
+    --success-bg:   #ecfdf5;
+    --purple:       #7c3aed;
+    --purple-bg:    #f5f3ff;
+    --warning:      #d97706;
+    --warning-bg:   #fffbeb;
+    --danger:       #dc2626;
+    --danger-bg:    #fef2f2;
+    --shadow-sm:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md:    0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+    --shadow-lg:    0 10px 40px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.06);
+    --radius:       16px;
+    --font:         'Outfit', sans-serif;
+    --mono:         'DM Mono', monospace;
+  }
+
+  .schedule-wrap {
+    font-family: var(--font);
+    max-width: 620px;
+    margin: 0 auto;
+    padding-bottom: 3rem;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem;
+    animation: slideUp .35s ease both;
+  }
+
+  .page-header-left { display: flex; align-items: center; gap: .75rem; }
+
+  .back-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    color: var(--text-mid); text-decoration: none; font-size: .85rem;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .18s, color .18s, transform .15s;
+  }
+
+  .back-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateX(-2px); }
+
+  .page-title { font-size: 1.35rem; font-weight: 700; color: var(--text-hi); letter-spacing: -.02em; }
+
+  .page-breadcrumb {
+    font-size: .72rem; color: var(--text-lo);
+    font-family: var(--mono); letter-spacing: .04em;
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .page-breadcrumb i { font-size: .65rem; }
+
+  /* ── HERO ── */
+  .hero-banner {
+    background: linear-gradient(135deg, #0b1120 0%, #0f1e3d 45%, #130e28 100%);
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.25rem;
+    position: relative; overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp .35s .05s ease both; opacity: 0;
+  }
+
+  .hero-banner::before {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 70% at 5% 50%, rgba(26,86,219,.42) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 90% 55%, rgba(124,58,237,.2) 0%, transparent 55%);
+    animation: meshMove 12s ease-in-out infinite alternate;
+  }
+
+  @keyframes meshMove {
+    from { transform: scale(1); }
+    to   { transform: scale(1.06) rotate(.3deg); }
+  }
+
+  .hero-banner::after {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .hero-topline {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent) 30%, #60a5fa 65%, transparent);
+    opacity: .85;
+  }
+
+  .hero-inner {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; gap: 1.1rem;
+  }
+
+  .hero-icon {
+    width: 52px; height: 52px; border-radius: 15px;
+    background: rgba(26,86,219,.28); border: 1px solid rgba(96,165,250,.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.35rem; color: #93c5fd; flex-shrink: 0;
+  }
+
+  .hero-title { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: -.02em; margin-bottom: .2rem; }
+  .hero-sub   { font-size: .72rem; color: rgba(255,255,255,.32); font-family: var(--mono); }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    animation: slideUp .35s .12s ease both; opacity: 0;
+  }
+
+  .form-card-head {
+    padding: .9rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfd;
+    display: flex; align-items: center; gap: .55rem;
+  }
+
+  .fch-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: .8rem;
+  }
+
+  .fch-icon.blue   { background: var(--accent-soft); color: var(--accent); }
+  .fch-icon.purple { background: var(--purple-bg);   color: var(--purple); }
+  .fch-icon.green  { background: var(--success-bg);  color: var(--success); }
+
+  .fch-title { font-size: .78rem; font-weight: 700; color: var(--text-hi); }
+
+  .form-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem; }
+
+  /* Two-col row */
+  .field-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  }
+
+  /* Field group */
+  .field-group { display: flex; flex-direction: column; gap: .4rem; }
+
+  .field-label {
+    font-size: .68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .12em;
+    color: var(--text-lo);
+    display: flex; align-items: center; gap: .35rem;
+  }
+
+  .field-label i { font-size: .7rem; color: var(--accent); }
+
+  .field-label .required {
+    color: var(--danger); font-size: .65rem; margin-left: .1rem;
+  }
+
+  /* Inputs */
+  .field-group input[type="date"],
+  .field-group input[type="time"],
+  .field-group input[type="url"],
+  .field-group input[type="text"],
+  .field-group select {
+    width: 100%;
+    padding: .65rem .9rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--font); font-size: .88rem;
+    color: var(--text-hi); background: var(--surface);
+    outline: none;
+    transition: border-color .18s, box-shadow .18s;
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .field-group input:focus,
+  .field-group select:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+  }
+
+  .field-group input::placeholder { color: var(--text-lo); }
+
+  /* Select arrow */
+  .select-wrap { position: relative; }
+
+  .select-wrap select { padding-right: 2.4rem; cursor: pointer; }
+
+  .select-wrap::after {
+    content: '\F282';
+    font-family: 'Bootstrap Icons';
+    position: absolute; right: .85rem; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-lo); font-size: .8rem;
+    pointer-events: none;
+  }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+  }
+
+  .mode-option { position: relative; }
+
+  .mode-option input[type="radio"] {
+    position: absolute; opacity: 0; width: 0; height: 0;
+  }
+
+  .mode-option label {
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .65rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px; background: #fafbfd;
+    font-size: .82rem; font-weight: 600; color: var(--text-mid);
+    cursor: pointer; transition: all .18s;
+  }
+
+  .mode-option label i { font-size: .9rem; }
+
+  .mode-option input:checked + label {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.08);
+  }
+
+  .mode-option label:hover {
+    border-color: var(--border-hi); color: var(--text-hi);
+    background: var(--bg);
+  }
+
+  /* Conditional fields */
+  .conditional-field {
+    overflow: hidden;
+    max-height: 0; opacity: 0;
+    transition: max-height .3s ease, opacity .3s ease, margin .3s ease;
+    margin-top: 0;
+  }
+
+  .conditional-field.visible {
+    max-height: 120px; opacity: 1;
+    margin-top: 0;
+  }
+
+  /* Divider */
+  .form-divider {
+    height: 1px; background: var(--border); margin: .2rem 0;
+  }
+
+  /* ── ACTIONS ── */
+  .form-actions {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border);
+    background: #fafbfd;
+    animation: slideUp .35s .2s ease both; opacity: 0;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .65rem 1.4rem; border-radius: 10px;
+    font-size: .85rem; font-weight: 600; font-family: var(--font);
+    cursor: pointer; border: 1.5px solid; transition: all .18s;
+    text-decoration: none; letter-spacing: .01em;
+  }
+
+  .btn-primary {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    box-shadow: 0 2px 10px rgba(26,86,219,.3);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-dark); border-color: var(--accent-dark);
+    box-shadow: 0 4px 16px rgba(26,86,219,.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    background: var(--surface); color: var(--text-mid); border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-ghost:hover { border-color: var(--border-hi); color: var(--text-hi); transform: translateY(-1px); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 520px) {
+    .field-row { grid-template-columns: 1fr; }
+    .form-actions { flex-direction: column-reverse; }
+    .form-actions .btn { width: 100%; justify-content: center; }
+    .hero-banner { padding: 1.4rem 1.25rem; }
+  }
+</style>
+
+<div class="schedule-wrap">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <a href="javascript:history.back()" class="back-btn"><i class="bi bi-arrow-left"></i></a>
+      <div class="page-title">Schedule Interview</div>
+    </div>
+    <div class="page-breadcrumb">
+      <i class="bi bi-calendar2-check"></i> Interview Scheduling
+    </div>
+  </div>
+
+  <!-- Hero banner -->
+  <div class="hero-banner">
+    <div class="hero-topline"></div>
+    <div class="hero-inner">
+      <div class="hero-icon"><i class="bi bi-calendar2-check-fill"></i></div>
+      <div>
+        <div class="hero-title">Set Interview Details</div>
+        <div class="hero-sub">Choose a date, time and preferred mode for the interview</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form method="POST" id="scheduleForm">
+    {% csrf_token %}
+
+    <div class="form-card">
+
+      <!-- Date & Time -->
+      <div class="form-card-head">
+        <div class="fch-icon blue"><i class="bi bi-clock-fill"></i></div>
+        <div class="fch-title">Date & Time</div>
+      </div>
+      <div class="form-body">
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">
+              <i class="bi bi-calendar3"></i> Date <span class="required">*</span>
+            </label>
+            <input type="date" name="date" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              <i class="bi bi-clock"></i> Time <span class="required">*</span>
+            </label>
+            <input type="time" name="time" required>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Mode -->
+        <div class="field-group">
+          <label class="field-label"><i class="bi bi-display"></i> Interview Mode</label>
+          <div class="mode-toggle">
+            <div class="mode-option">
+              <input type="radio" name="mode" id="modeOnline" value="Online" checked onchange="toggleMode()">
+              <label for="modeOnline"><i class="bi bi-camera-video-fill"></i> Online</label>
+            </div>
+            <div class="mode-option">
+              <input type="radio" name="mode" id="modeOffline" value="Offline" onchange="toggleMode()">
+              <label for="modeOffline"><i class="bi bi-building"></i> In-Person</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conditional: Meeting Link (Online) -->
+        <div class="conditional-field visible" id="linkField">
+          <div class="field-group">
+            <label class="field-label"><i class="bi bi-link-45deg"></i> Meeting Link</label>
+            <input type="url" name="link" placeholder="https://meet.google.com/...">
+          </div>
+        </div>
+
+        <!-- Conditional: Location (Offline) -->
+        <div class="conditional-field" id="locationField">
+          <div class="field-group">
+            <label class="field-label"><i class="bi bi-geo-alt"></i> Interview Location</label>
+            <input type="text" name="location" placeholder="e.g. 3rd Floor, Tower B, Technopark">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <a href="javascript:history.back()" class="btn btn-ghost">
+          <i class="bi bi-x-lg"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-calendar2-check-fill"></i> Schedule Interview
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+
+<script>
+  function toggleMode() {
+    const online   = document.getElementById('modeOnline').checked;
+    const linkEl   = document.getElementById('linkField');
+    const locEl    = document.getElementById('locationField');
+
+    if (online) {
+      linkEl.classList.add('visible');
+      locEl.classList.remove('visible');
+    } else {
+      linkEl.classList.remove('visible');
+      locEl.classList.add('visible');
+    }
+  }
+
+  // Set min date to today
+  const dateInput = document.querySelector('input[type="date"]');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+  }
+</script>
+
+{% endblock %}
