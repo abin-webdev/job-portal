@@ -5,11 +5,9 @@ dj-database-url==2.2.0
 python-dotenv==1.0.1
 
 # Database
-
 psycopg2-binary==2.9.9
 
 # Resume parsing
-
 spacy==3.8.11
 nltk==3.9.3
 pyresparser==1.0.6
@@ -17,11 +15,12 @@ pdfplumber==0.11.9
 docx2txt==0.9
 
 # Data processing
-
 numpy==1.26.4
 
 # Utility
-
 requests==2.32.3
 pillow==10.4.0
 tqdm==4.66.4
+
+# IMPORTANT (fix for Render)
+pydantic==1.10.13
